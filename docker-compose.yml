@@ -4,7 +4,7 @@ services:
   backend:
     build: ./backend
     ports:
-      - "8000:8000"
+      - "8656:8000"
     environment:
       - DATABASE_URL=postgresql://beer_user:beer_password@db:5432/beer_counter
     volumes:
