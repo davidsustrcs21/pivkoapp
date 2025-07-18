@@ -126,30 +126,12 @@ async def dashboard(
 ):
     # Získej aktivní články
     active_articles = db.query(Article).filter(Article.is_active == True).all()
-    print(f"Active articles: {len(active_articles)}")  # Debugprint(f"Active articles: {len(active_articles)}")  # Debug
+    print(f"Active articles: {len(active_articles)}")
     
-    nebo vytvoř 
-    # Získej nebo vytvoř p[]
+    # Získej nebo vytvoř počty pro uživatele
+    user_article_counts = []
     for article in active_articles:
-        count = očty pro uživatelefilter(
-            UserArticleCunt.user_d == curret_user.id,
-            UserCountartce_id == aricl.id
-        ).fist)
-    user
-        if not count:
-            count = _article_counts (
-                 []
-    for         article_id=article.id,
-                count=0
-            )
-            db.add(count)
-            db commit()
-            db.refrenh(count)
-        
-        count.article = article  # Přidej článek pro template
-      _tuser_acticle_colnts.append(count)
-    s:
-    print(f"User article counts: {[(c  rtic e.name, c.count) for c in user_articce_counts]}"u  # Debugnt = db.query(UserArticleCount).filter(
+        count = db.query(UserArticleCount).filter(
             UserArticleCount.user_id == current_user.id,
             UserArticleCount.article_id == article.id
         ).first()
@@ -164,10 +146,10 @@ async def dashboard(
             db.commit()
             db.refresh(count)
         
-        count.article = article  # Přidej článek pro template
+        count.article = article
         user_article_counts.append(count)
     
-    print(f"User article counts: {[(c.article.name, c.count) for c in user_article_counts]}")  # Debug
+    print(f"User article counts: {[(c.article.name, c.count) for c in user_article_counts]}")
     
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
@@ -220,11 +202,15 @@ async def calculate_payment(
         UserArticleCount.count > 0
     ).all()
     
+    print(f"Found {len(user_counts)} user counts for user {user_id}")
+    
     for count in user_counts:
         # Použij účet z článku, nebo výchozí
         account = count.article.payment_account
         if not account:
-            account = "123456789/0100"  # Výchozí účet
+            account = "123456789/0100"
+            
+        print(f"Processing article: {count.article.name}, account: {account}, count: {count.count}")
             
         if account not in payment_groups:
             payment_groups[account] = {"total": 0, "items": []}
@@ -239,14 +225,19 @@ async def calculate_payment(
             "total": total
         })
     
+    print(f"Payment groups: {payment_groups}")
+    
     # Generuj QR kódy pro každý účet
     qr_codes = {}
     for account, data in payment_groups.items():
         if data["total"] > 0:
             items_text = ", ".join([f"{item['count']}x {item['name']}" for item in data["items"]])
             message = f"{items_text} - {user.username}"
-            print(f"Generating QR for account: {account}, amount: {data['total']}, message: {message}")  # Debug
+            print(f"Generating QR for account: {account}, amount: {data['total']}, message: {message}")
             qr_codes[account] = generate_payment_qr(data["total"], message, account)
+            print(f"QR code generated for {account}: {len(qr_codes[account])} chars")
+    
+    print(f"QR codes: {list(qr_codes.keys())}")
     
     return templates.TemplateResponse("payment.html", {
         "request": request,
@@ -307,6 +298,8 @@ async def reset_user_count(
         user.entry_count = 0
         # Delete all entries
         db.query(CountEntry).filter(CountEntry.user_id == user_id).delete()
+        # Reset article counts
+        db.query(UserArticleCount).filter(UserArticleCount.user_id == user_id).delete()
         db.commit()
     
     return RedirectResponse(url="/admin", status_code=302)
@@ -334,6 +327,7 @@ async def delete_user(
     user = db.query(User).filter(User.id == user_id).first()
     if user and not user.is_admin:
         db.query(CountEntry).filter(CountEntry.user_id == user_id).delete()
+        db.query(UserArticleCount).filter(UserArticleCount.user_id == user_id).delete()
         db.delete(user)
         db.commit()
     
@@ -447,70 +441,4 @@ async def delete_article(
     db.query(Article).filter(Article.id == article_id).delete()
     db.commit()
     return RedirectResponse(url="/admin", status_code=302)
-
-
-@app.post("/admin/articles")
-async def create_article(
-    name: str = Form(...),
-    price: float = Form(...),
-    emoji: str = Form(...),
-    payment_account: str = Form(...),
-    admin_user: User = Depends(get_admin_user),
-    db: Session = Depends(get_db)
-):
-    article = Article(
-        name=name,
-        price=price,
-        emoji=emoji,
-        payment_account=payment_account
-    )
-    db.add(article)
-    db.commit()
-    return RedirectResponse(url="/admin", status_code=302)
-
-@app.post("/admin/articles/{article_id}")
-async def update_article(
-    article_id: int,
-    name: str = Form(...),
-    price: float = Form(...),
-    emoji: str = Form(...),
-    payment_account: str = Form(...),
-    is_active: bool = Form(False),
-    admin_user: User = Depends(get_admin_user),
-    db: Session = Depends(get_db)
-):
-    article = db.query(Article).filter(Article.id == article_id).first()
-    if article:
-        article.name = name
-        article.price = price
-
-        article.emoji = emoji
-        article.payment_account = payment_account
-        article.is_active = is_active
-        db.commit()
-    return RedirectResponse(url="/admin", status_code=302)
-
-@app.post("/admin/articles/{article_id}/delete")
-async def delete_article(
-    article_id: int,
-    admin_user: User = Depends(get_admin_user),
-    db: Session = Depends(get_db)
-):
-    # Smaž počty uživatelů pro tento článek
-    db.query(UserArticleCount).filter(UserArticleCount.article_id == article_id).delete()
-    # Smaž článek
-    db.query(Article).filter(Article.id == article_id).delete()
-    db.commit()
-    return RedirectResponse(url="/admin", status_code=302)
-
-
-
-
-
-
-
-
-
-
-
 
