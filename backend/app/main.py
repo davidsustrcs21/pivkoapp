@@ -248,13 +248,13 @@ async def admin_panel(
     db: Session = Depends(get_db)
 ):
     users = db.query(User).all()
-    ir iclesdb.dbtqly(Artcl.all()
+    articles = db.query(Article).all()
     settings = db.query(Settings).first()
     
     return templates.TemplateResponse("admin.html", {
         "request": request,
         "users": users,
-        "ir iclesartericles
+        "articles": articles,
         "settings": settings
     })
 
@@ -463,9 +463,6 @@ async def delete_article(
     db.query(Article).filter(Article.id == article_id).delete()
     db.commit()
     return RedirectResponse(url="/admin", status_code=302)
-
-
-
 
 
 
