@@ -21,49 +21,43 @@
         <div class="max-w-2xl mx-auto">
             <h1 class="text-3xl font-bold text-center mb-8">Platba pro {{ user.username }}</h1>
             
-            {% if payment_groups %}
-                {% for account, data in payment_groups.items() %}
-                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <h2 class="text-xl font-bold mb-4">Účet: {{ account }}</h2>
-                    
-                    <div class="grid md:grid-cols-2 gap-6">
-                        <div>
-                            <h3 class="font-semibold mb-3">Položky:</h3>
-                            {% for item in data.items %}
-                            <div class="flex justify-between py-1">
-                                <span>{{ item.emoji }} {{ item.count }}x {{ item.name }} ({{ item.price }}Kč)</span>
-                                <span class="font-bold">{{ item.total }}Kč</span>
-                            </div>
-                            {% endfor %}
-                            <hr class="my-2">
-                            <div class="flex justify-between font-bold text-lg">
-                                <span>Celkem:</span>
-                                <span>{{ data.total }}Kč</span>
-                            </div>
-                        </div>
-                        
-                        <div class="text-center">
-                            {% if qr_codes[account] %}
-                            <img src="{{ qr_codes[account] }}" alt="QR kód pro platbu" class="mx-auto mb-4 max-w-full">
-                            <p class="text-sm text-gray-600">Naskenujte QR kód v bankovní aplikaci</p>
-                            {% else %}
-                            <p class="text-red-600">QR kód se nepodařilo vygenerovat</p>
-                            {% endif %}
-                        </div>
+            <!-- Summary -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-bold mb-4">Souhrn</h2>
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span>🍺 Piva ({{ user.count }}x {{ settings.beer_price }}Kč)</span>
+                        <span class="font-bold">{{ beer_total }}Kč</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>🥤 Birelly ({{ user.birell_count }}x {{ settings.birell_price }}Kč)</span>
+                        <span class="font-bold">{{ birell_total }}Kč</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>🎫 Vstupy ({{ user.entry_count }}x {{ settings.entry_price }}Kč)</span>
+                        <span class="font-bold">{{ entry_total }}Kč</span>
                     </div>
                 </div>
-                {% endfor %}
-            {% else %}
-                <div class="bg-white rounded-lg shadow-md p-6 text-center">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">Žádné položky k platbě</h2>
-                    <p class="text-gray-600 mb-4">Nemáte žádné položky k zaplacení.</p>
-                    <a href="/dashboard" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                        Zpět na dashboard
-                    </a>
-                </div>
+            </div>
+            
+            <!-- Payment QR codes -->
+            {% if drinks_qr %}
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
+                <h2 class="text-xl font-bold mb-4">Platba za pití ({{ drinks_total }}Kč)</h2>
+                <img src="{{ drinks_qr }}" alt="QR platba za pití" class="mx-auto mb-4">
+                <p class="text-sm text-gray-600">Naskenujte QR kód v bankovní aplikaci</p>
+            </div>
             {% endif %}
             
-            <div class="text-center mt-6">
+            {% if entry_qr %}
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
+                <h2 class="text-xl font-bold mb-4">Platba za vstup ({{ entry_total }}Kč)</h2>
+                <img src="{{ entry_qr }}" alt="QR platba za vstup" class="mx-auto mb-4">
+                <p class="text-sm text-gray-600">Naskenujte QR kód v bankovní aplikaci</p>
+            </div>
+            {% endif %}
+            
+            <div class="text-center">
                 <a href="/dashboard" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                     Zpět na dashboard
                 </a>
