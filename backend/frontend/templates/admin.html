@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Beer Counter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="bg-white shadow-sm border-b">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl font-bold text-gray-800">🍺 Admin Panel</h1>
+                <div class="flex items-center space-x-4">
+                    <a href="/dashboard" class="text-blue-600 hover:text-blue-800">Dashboard</a>
+                    <form method="POST" action="/logout" class="inline">
+                        <button type="submit" class="text-red-600 hover:text-red-800">Odhlásit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Statistics -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Statistiky</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-blue-600">{{ users|length }}</div>
+                    <div class="text-gray-600">Celkem uživatelů</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-green-600">{{ total_count }}</div>
+                    <div class="text-gray-600">Celkem piv</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-yellow-600">{{ (total_count / users|length)|round(1) if users|length > 0 else 0 }}</div>
+                    <div class="text-gray-600">Průměr na uživatele</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Správa uživatelů</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full table-auto">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-2 text-left">Uživatel</th>
+                            <th class="px-4 py-2 text-center">Email</th>
+                            <th class="px-4 py-2 text-center">Počet piv</th>
+                            <th class="px-4 py-2 text-center">Role</th>
+                            <th class="px-4 py-2 text-center">QR kód</th>
+                            <th class="px-4 py-2 text-center">Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                            <tr class="border-b border-gray-100">
+                                <td class="px-4 py-2">
+                                    <span class="font-medium">{{ user.username }}</span>
+                                </td>
+                                <td class="px-4 py-2 text-center">
+                                    <span class="text-gray-600">{{ user.email }}</span>
+                                </td>
+                                <td class="px-4 py-2 text-center">
+                                    <span class="font-bold text-lg">{{ user.count }}</span> 🍺
+                                </td>
+                                <td class="px-4 py-2 text-center">
+                                    {% if user.is_admin %}
+                                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm">Admin</span>
+                                    {% else %}
+                                        <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm">Uživatel</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-2 text-center">
+                                    <a href="/qr/{{ user.id }}" class="text-blue-600 hover:text-blue-800">
+                                        Zobrazit
+                                    </a>
+                                </td>
+                                <td class="px-4 py-2 text-center">
+                                    <div class="flex justify-center space-x-2">
+                                        <form method="POST" action="/admin/reset-user/{{ user.id }}" class="inline">
+                                            <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-sm"
+                                                    onclick="return confirm('Opravdu chcete resetovat počet piv pro {{ user.username }}?')">
+                                                Reset
+                                            </button>
+                                        </form>
+                                        {% if not user.is_admin %}
+                                            <form method="POST" action="/admin/delete-user/{{ user.id }}" class="inline">
+                                                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-sm"
+                                                        onclick="return confirm('Opravdu chcete smazat uživatele {{ user.username }}?')">
+                                                    Smazat
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
