@@ -7,12 +7,12 @@ from datetime import timedelta, datetime
 import os
 
 from .database import engine, get_db
-from .models import Base, User, CountEntry
+from .models import Base, User, CountEntry, Settings
 from .auth import (
     verify_password, get_password_hash, create_access_token,
     get_current_user, get_admin_user, ACCESS_TOKEN_EXPIRE_MINUTES
 )
-from .utils import generate_qr_code
+from .utils import generate_qr_code, generate_payment_qr
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -55,6 +55,7 @@ async def login_page(request: Request):
 
 @app.post("/login")
 async def login(
+    response: Response,
     username: str = Form(...),
     password: str = Form(...),
     db: Session = Depends(get_db)
@@ -69,7 +70,7 @@ async def login(
     )
     
     response = RedirectResponse(url="/dashboard", status_code=302)
-    response.set_cookie(key="token", value=access_token, httponly=True)
+    response.set_cookie(key="access_token", value=f"Bearer {access_token}", httponly=True)
     return response
 
 @app.get("/register", response_class=HTMLResponse)
@@ -105,19 +106,15 @@ async def dashboard(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    recent_entries = db.query(CountEntry).filter(
-        CountEntry.user_id == current_user.id
-    ).order_by(CountEntry.timestamp.desc()).limit(10).all()
-    
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
-        "user": current_user,
-        "recent_entries": recent_entries
+        "user": current_user
     })
 
 @app.post("/add-count")
 async def add_count(
     amount: int = Form(1),
+    entry_type: str = Form("beer"),
     note: str = Form(""),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -125,15 +122,67 @@ async def add_count(
     entry = CountEntry(
         user_id=current_user.id,
         amount=amount,
+        entry_type=entry_type,
         note=note if note else None
     )
     db.add(entry)
     
-    # Update user total count
-    current_user.count += amount
-    db.commit()
+    # Update user counts based on type
+    if entry_type == "beer":
+        current_user.count += amount
+    elif entry_type == "birell":
+        current_user.birell_count += amount
+    elif entry_type == "entry":
+        current_user.entry_count += amount
     
+    db.commit()
     return RedirectResponse(url="/dashboard", status_code=302)
+
+@app.get("/calculate-payment/{user_id}")
+async def calculate_payment(
+    request: Request,
+    user_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Only allow users to see their own payment or admins
+    if current_user.id != user_id and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    settings = db.query(Settings).first()
+    if not settings:
+        settings = Settings()
+        db.add(settings)
+        db.commit()
+    
+    # Calculate totals
+    beer_total = user.count * settings.beer_price
+    birell_total = user.birell_count * settings.birell_price
+    entry_total = user.entry_count * settings.entry_price
+    
+    # Generate payment QR codes
+    drinks_total = beer_total + birell_total
+    drinks_qr = None
+    entry_qr = None
+    
+    if drinks_total > 0:
+        drinks_qr = generate_payment_qr(drinks_total, f"Piva a birelly - {user.username}", settings.payment_account)
+    
+    if entry_total > 0:
+        entry_qr = generate_payment_qr(entry_total, f"Vstupne - {user.username}", settings.payment_account)
+    
+    return templates.TemplateResponse("payment.html", {
+        "request": request,
+        "user": user,
+        "settings": settings,
+        "beer_total": beer_total,
+        "birell_total": birell_total,
+        "entry_total": entry_total,
+        "drinks_total": drinks_total,
+        "drinks_qr": drinks_qr,
+        "entry_qr": entry_qr
+    })
 
 @app.get("/qr/{user_id}", response_class=HTMLResponse)
 async def user_qr(
@@ -165,11 +214,13 @@ async def admin_panel(
 ):
     users = db.query(User).all()
     total_count = sum(user.count for user in users)
+    settings = db.query(Settings).first()
     
     return templates.TemplateResponse("admin.html", {
         "request": request,
         "users": users,
-        "total_count": total_count
+        "total_count": total_count,
+        "settings": settings
     })
 
 @app.post("/admin/reset-user/{user_id}")
@@ -181,8 +232,24 @@ async def reset_user_count(
     user = db.query(User).filter(User.id == user_id).first()
     if user:
         user.count = 0
+        user.birell_count = 0
+        user.entry_count = 0
         # Delete all entries
         db.query(CountEntry).filter(CountEntry.user_id == user_id).delete()
+        db.commit()
+    
+    return RedirectResponse(url="/admin", status_code=302)
+
+@app.post("/admin/reset-password/{user_id}")
+async def reset_user_password(
+    user_id: int,
+    new_password: str = Form(...),
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if user:
+        user.hashed_password = get_password_hash(new_password)
         db.commit()
     
     return RedirectResponse(url="/admin", status_code=302)
@@ -194,19 +261,37 @@ async def delete_user(
     db: Session = Depends(get_db)
 ):
     user = db.query(User).filter(User.id == user_id).first()
-    if user and not user.is_admin:  # Don't delete admin users
+    if user and not user.is_admin:
         db.query(CountEntry).filter(CountEntry.user_id == user_id).delete()
         db.delete(user)
         db.commit()
     
     return RedirectResponse(url="/admin", status_code=302)
 
+@app.post("/admin/settings")
+async def update_settings(
+    beer_price: float = Form(...),
+    birell_price: float = Form(...),
+    entry_price: float = Form(...),
+    payment_account: str = Form(...),
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    settings = db.query(Settings).first()
+    if not settings:
+        settings = Settings()
+        db.add(settings)
+    
+    settings.beer_price = beer_price
+    settings.birell_price = birell_price
+    settings.entry_price = entry_price
+    settings.payment_account = payment_account
+    db.commit()
+    
+    return RedirectResponse(url="/admin", status_code=302)
+
 @app.post("/logout")
 async def logout():
     response = RedirectResponse(url="/", status_code=302)
-    response.delete_cookie(key="token")
+    response.delete_cookie(key="access_token")
     return response
-
-
-
-

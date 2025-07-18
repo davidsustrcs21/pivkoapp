@@ -43,5 +43,3 @@ def generate_payment_qr(amount: float, message: str, account: str) -> str:
     img_str = base64.b64encode(buffer.getvalue()).decode()
     
     return f"data:image/png;base64,{img_str}"
-
-

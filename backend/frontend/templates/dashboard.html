@@ -26,117 +26,109 @@
     </nav>
 
     <div class="container mx-auto px-4 py-8">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Current Count -->
-            <div class="bg-white rounded-lg shadow-md p-6 text-center">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Tvůj počet</h2>
-                <div class="text-6xl font-bold count-display mb-4">{{ user.count }}</div>
-                <p class="text-gray-600">🍺 piv celkem</p>
-            </div>
-
-            <!-- Add Count -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Přidat položky</h2>
-                
-                <!-- Beer section -->
-                <div class="mb-4">
-                    <h3 class="font-semibold mb-2">🍺 Piva</h3>
-                    <div class="grid grid-cols-3 gap-2">
-                        <form method="POST" action="/add-count" class="inline">
-                            <input type="hidden" name="amount" value="1">
-                            <input type="hidden" name="entry_type" value="beer">
-                            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded text-sm">+1</button>
-                        </form>
-                        <form method="POST" action="/add-count" class="inline">
-                            <input type="hidden" name="amount" value="2">
-                            <input type="hidden" name="entry_type" value="beer">
-                            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded text-sm">+2</button>
-                        </form>
-                        <form method="POST" action="/add-count" class="inline">
-                            <input type="hidden" name="amount" value="5">
-                            <input type="hidden" name="entry_type" value="beer">
-                            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded text-sm">+5</button>
-                        </form>
-                    </div>
-                </div>
-                
-                <!-- Birell section -->
-                <div class="mb-4">
-                    <h3 class="font-semibold mb-2">🥤 Birelly</h3>
-                    <div class="grid grid-cols-3 gap-2">
-                        <form method="POST" action="/add-count" class="inline">
-                            <input type="hidden" name="amount" value="1">
-                            <input type="hidden" name="entry_type" value="birell">
-                            <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-3 rounded text-sm">+1</button>
-                        </form>
-                        <form method="POST" action="/add-count" class="inline">
-                            <input type="hidden" name="amount" value="2">
-                            <input type="hidden" name="entry_type" value="birell">
-                            <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-3 rounded text-sm">+2</button>
-                        </form>
-                        <form method="POST" action="/add-count" class="inline">
-                            <input type="hidden" name="amount" value="5">
-                            <input type="hidden" name="entry_type" value="birell">
-                            <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-3 rounded text-sm">+5</button>
-                        </form>
-                    </div>
-                </div>
-                
-                <!-- Entry section -->
-                <div class="mb-4">
-                    <h3 class="font-semibold mb-2">🎫 Vstupenky</h3>
-                    <form method="POST" action="/add-count" class="inline">
-                        <input type="hidden" name="amount" value="1">
-                        <input type="hidden" name="entry_type" value="entry">
-                        <button type="submit" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-3 rounded text-sm">+1 Vstup</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- QR Code -->
-            <div class="bg-white rounded-lg shadow-md p-6 text-center">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Tvůj QR kód</h2>
-                <a href="/qr/{{ user.id }}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors">
-                    Zobrazit QR kód
-                </a>
-                <p class="text-sm text-gray-600 mt-2">Pro sdílení s přáteli</p>
-            </div>
-
-            <!-- Recent Entries -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Poslední záznamy</h2>
-                {% if recent_entries %}
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl font-bold text-center mb-8">Vítej, {{ user.username }}! 🍺</h1>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Current Count -->
+                <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Tvůj počet</h2>
                     <div class="space-y-2">
-                        {% for entry in recent_entries %}
-                            <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                                <div>
-                                    <span class="font-medium">+{{ entry.amount }} 🍺</span>
-                                    {% if entry.note %}
-                                        <span class="text-gray-600 text-sm">- {{ entry.note }}</span>
-                                    {% endif %}
-                                </div>
-                                <span class="text-gray-500 text-sm">
-                                    {{ entry.timestamp.strftime('%d.%m. %H:%M') }}
-                                </span>
-                            </div>
-                        {% endfor %}
+                        <div class="text-4xl font-bold text-blue-600">🍺 {{ user.count }}</div>
+                        <div class="text-2xl font-bold text-green-600">🥤 {{ user.birell_count }}</div>
+                        <div class="text-2xl font-bold text-purple-600">🎫 {{ user.entry_count }}</div>
                     </div>
-                {% else %}
-                    <p class="text-gray-600">Zatím žádné záznamy</p>
-                {% endif %}
-            </div>
-
-            <!-- Payment calculation -->
-            <div class="bg-white rounded-lg shadow-md p-6 text-center">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Spočítat platbu</h2>
-                <div class="space-y-2 text-sm mb-4">
-                    <p>🍺 Piva: {{ user.count }}</p>
-                    <p>🥤 Birelly: {{ user.birell_count }}</p>
-                    <p>🎫 Vstupy: {{ user.entry_count }}</p>
                 </div>
-                <a href="/calculate-payment/{{ user.id }}" class="inline-block bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded transition-colors">
-                    Spočítat a zaplatit
-                </a>
+
+                <!-- Add Count -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Přidat položky</h2>
+                    
+                    <!-- Beer section -->
+                    <div class="mb-4">
+                        <h3 class="font-semibold mb-2">🍺 Piva</h3>
+                        <div class="grid grid-cols-3 gap-2">
+                            <form method="POST" action="/add-count" class="inline">
+                                <input type="hidden" name="amount" value="1">
+                                <input type="hidden" name="entry_type" value="beer">
+                                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded text-sm">+1</button>
+                            </form>
+                            <form method="POST" action="/add-count" class="inline">
+                                <input type="hidden" name="amount" value="2">
+                                <input type="hidden" name="entry_type" value="beer">
+                                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded text-sm">+2</button>
+                            </form>
+                            <form method="POST" action="/add-count" class="inline">
+                                <input type="hidden" name="amount" value="5">
+                                <input type="hidden" name="entry_type" value="beer">
+                                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded text-sm">+5</button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Birell section -->
+                    <div class="mb-4">
+                        <h3 class="font-semibold mb-2">🥤 Birelly</h3>
+                        <div class="grid grid-cols-3 gap-2">
+                            <form method="POST" action="/add-count" class="inline">
+                                <input type="hidden" name="amount" value="1">
+                                <input type="hidden" name="entry_type" value="birell">
+                                <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-3 rounded text-sm">+1</button>
+                            </form>
+                            <form method="POST" action="/add-count" class="inline">
+                                <input type="hidden" name="amount" value="2">
+                                <input type="hidden" name="entry_type" value="birell">
+                                <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-3 rounded text-sm">+2</button>
+                            </form>
+                            <form method="POST" action="/add-count" class="inline">
+                                <input type="hidden" name="amount" value="5">
+                                <input type="hidden" name="entry_type" value="birell">
+                                <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-3 rounded text-sm">+5</button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Entry section -->
+                    <div class="mb-4">
+                        <h3 class="font-semibold mb-2">🎫 Vstupenky</h3>
+                        <form method="POST" action="/add-count" class="inline">
+                            <input type="hidden" name="amount" value="1">
+                            <input type="hidden" name="entry_type" value="entry">
+                            <button type="submit" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-3 rounded text-sm">+1 Vstup</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- QR Code -->
+                <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Tvůj QR kód</h2>
+                    <a href="/qr/{{ user.id }}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors mb-4">
+                        Zobrazit QR kód
+                    </a>
+                    <p class="text-sm text-gray-600">Pro sdílení s přáteli</p>
+                </div>
+
+                <!-- Payment calculation -->
+                <div class="bg-white rounded-lg shadow-md p-6 text-center md:col-span-2 lg:col-span-3">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Spočítat platbu</h2>
+                    <div class="grid grid-cols-3 gap-4 text-sm mb-4">
+                        <div>
+                            <p class="font-semibold">🍺 Piva</p>
+                            <p>{{ user.count }} ks</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">🥤 Birelly</p>
+                            <p>{{ user.birell_count }} ks</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">🎫 Vstupy</p>
+                            <p>{{ user.entry_count }} ks</p>
+                        </div>
+                    </div>
+                    <a href="/calculate-payment/{{ user.id }}" class="inline-block bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded transition-colors">
+                        Spočítat a zaplatit
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -144,4 +136,3 @@
     <script src="/static/script.js"></script>
 </body>
 </html>
-
