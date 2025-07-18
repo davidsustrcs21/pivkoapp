@@ -126,12 +126,48 @@ async def dashboard(
 ):
     # Získej aktivní články
     active_articles = db.query(Article).filter(Article.is_active == True).all()
+    print(f"Active articles: {len(active_articles)}")  # Debugprint(f"Active articles: {len(active_articles)}")  # Debug
     
-    # Získej počty pro uživatele
-    user_article_counts = db.query(UserArticleCount).join(Article).filter(
-        UserArticleCount.user_id == current_user.id,
-        Article.is_active == True
-    ).all()
+    nebo vytvoř 
+    # Získej nebo vytvoř p[]
+    for article in active_articles:
+        count = očty pro uživatelefilter(
+            UserArticleCunt.user_d == curret_user.id,
+            UserCountartce_id == aricl.id
+        ).fist)
+    user
+        if not count:
+            count = _article_counts (
+                 []
+    for         article_id=article.id,
+                count=0
+            )
+            db.add(count)
+            db commit()
+            db.refrenh(count)
+        
+        count.article = article  # Přidej článek pro template
+      _tuser_acticle_colnts.append(count)
+    s:
+    print(f"User article counts: {[(c  rtic e.name, c.count) for c in user_articce_counts]}"u  # Debugnt = db.query(UserArticleCount).filter(
+            UserArticleCount.user_id == current_user.id,
+            UserArticleCount.article_id == article.id
+        ).first()
+        
+        if not count:
+            count = UserArticleCount(
+                user_id=current_user.id,
+                article_id=article.id,
+                count=0
+            )
+            db.add(count)
+            db.commit()
+            db.refresh(count)
+        
+        count.article = article  # Přidej článek pro template
+        user_article_counts.append(count)
+    
+    print(f"User article counts: {[(c.article.name, c.count) for c in user_article_counts]}")  # Debug
     
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
@@ -331,29 +367,31 @@ async def logout():
     response.delete_cookie(key="access_token")
     return response
 
-@app.post("/add-article-count")
-async def add_article_count(
-    article_id: int = Form(...),
-    amount: int = Form(1),
+@app.post("/add-item/{article_id}/{amount}")
+async def add_item(
+    article_id: int,
+    amount: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Najdi nebo vytvoř počítadlo pro uživatele a článek
-    user_count = db.query(UserArticleCount).filter(
+    # Najdi nebo vytvoř počet pro uživatele a článek
+    count = db.query(UserArticleCount).filter(
         UserArticleCount.user_id == current_user.id,
         UserArticleCount.article_id == article_id
     ).first()
     
-
-    if not user_count:
-        user_count = UserArticleCount(
+    if not count:
+        count = UserArticleCount(
             user_id=current_user.id,
             article_id=article_id,
             count=0
         )
-        db.add(user_count)
+        db.add(count)
     
-    user_count.count += amount
+    count.count += amount
+    if count.count < 0:
+        count.count = 0
+    
     db.commit()
     return RedirectResponse(url="/dashboard", status_code=302)
 
@@ -445,6 +483,7 @@ async def update_article(
     if article:
         article.name = name
         article.price = price
+
         article.emoji = emoji
         article.payment_account = payment_account
         article.is_active = is_active
@@ -463,6 +502,13 @@ async def delete_article(
     db.query(Article).filter(Article.id == article_id).delete()
     db.commit()
     return RedirectResponse(url="/admin", status_code=302)
+
+
+
+
+
+
+
 
 
 
