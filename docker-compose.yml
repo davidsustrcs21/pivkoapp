@@ -4,11 +4,11 @@ services:
   backend:
     build: ./backend
     ports:
-      - "8656:8000"
+      - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://beer_user:beer_password@db:5432/beer_counter
     volumes:
-      - ./frontend:/app/frontend
+      - ./frontend:/app/frontend:ro
     depends_on:
       - db
     restart: unless-stopped
@@ -25,3 +25,5 @@ services:
 
 volumes:
   postgres_data:
+
+
