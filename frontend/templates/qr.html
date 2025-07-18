@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR kód - {{ user.username }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-md mx-auto">
+            <div class="text-center mb-6">
+                <a href="/dashboard" class="text-blue-600 hover:text-blue-800">← Zpět na dashboard</a>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                <h1 class="text-2xl font-bold text-gray-800 mb-4">
+                    QR kód pro {{ user.username }}
+                </h1>
+                
+                <div class="mb-6">
+                    <img src="{{ qr_code }}" alt="QR kód" class="mx-auto max-w-full h-auto">
+                </div>
+                
+                <div class="mb-4">
+                    <p class="text-gray-600 mb-2">Odkaz pro registraci:</p>
+                    <div class="bg-gray-100 p-2 rounded text-sm break-all">
+                        {{ qr_url }}
+                    </div>
+                </div>
+                
+                <div class="text-sm text-gray-500">
+                    <p>Naskenuj QR kód nebo použij odkaz pro rychlou registraci</p>
+                </div>
+                
+                <div class="mt-6">
+                    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Vytisknout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
