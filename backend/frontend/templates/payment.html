@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platba - Beer Counter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="bg-white shadow-sm border-b">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl font-bold text-gray-800">🍺 Beer Counter</h1>
+                <a href="/dashboard" class="text-blue-600 hover:text-blue-800">Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto">
+            <h1 class="text-3xl font-bold text-center mb-8">Platba pro {{ user.username }}</h1>
+            
+            <!-- Summary -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-bold mb-4">Souhrn</h2>
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span>🍺 Piva ({{ user.count }}x {{ settings.beer_price }}Kč)</span>
+                        <span class="font-bold">{{ beer_total }}Kč</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>🥤 Birelly ({{ user.birell_count }}x {{ settings.birell_price }}Kč)</span>
+                        <span class="font-bold">{{ birell_total }}Kč</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>🎫 Vstupy ({{ user.entry_count }}x {{ settings.entry_price }}Kč)</span>
+                        <span class="font-bold">{{ entry_total }}Kč</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Payment QR codes -->
+            {% if drinks_qr %}
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
+                <h2 class="text-xl font-bold mb-4">Platba za pití ({{ drinks_total }}Kč)</h2>
+                <img src="{{ drinks_qr }}" alt="QR platba za pití" class="mx-auto mb-4">
+                <p class="text-sm text-gray-600">Naskenujte QR kód v bankovní aplikaci</p>
+            </div>
+            {% endif %}
+            
+            {% if entry_qr %}
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
+                <h2 class="text-xl font-bold mb-4">Platba za vstup ({{ entry_total }}Kč)</h2>
+                <img src="{{ entry_qr }}" alt="QR platba za vstup" class="mx-auto mb-4">
+                <p class="text-sm text-gray-600">Naskenujte QR kód v bankovní aplikaci</p>
+            </div>
+            {% endif %}
+            
+            <div class="text-center">
+                <a href="/dashboard" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Zpět na dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
