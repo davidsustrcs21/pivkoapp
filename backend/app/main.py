@@ -7,7 +7,7 @@ from datetime import timedelta, datetime
 import os
 
 from .database import engine, get_db
-from .models import Base, User, CountEntry, Settings
+from .models import Base, User, CountEntry, Settings, Article, UserArticleCount
 from .auth import (
     verify_password, get_password_hash, create_access_token,
     get_current_user, get_admin_user, ACCESS_TOKEN_EXPIRE_MINUTES
@@ -42,6 +42,24 @@ def create_default_admin():
         db.add(admin)
         db.commit()
     db.close()
+
+def create_default_articles():
+    db = next(get_db())
+    if db.query(Article).count() == 0:
+        articles = [
+            Article(name="Pivo", price=50.0, emoji="🍺", payment_account="123456789/0100"),
+            Article(name="Birell", price=30.0, emoji="🥤", payment_account="123456789/0100"),
+            Article(name="Vstupné", price=100.0, emoji="🎫", payment_account="987654321/0100"),
+        ]
+        for article in articles:
+            db.add(article)
+        db.commit()
+    db.close()
+
+@app.on_event("startup")
+async def startup_event():
+    create_default_admin()
+    create_default_articles()
 
 create_default_admin()
 
@@ -106,9 +124,20 @@ async def dashboard(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    # Získej aktivní články
+    active_articles = db.query(Article).filter(Article.is_active == True).all()
+    
+    # Získej počty pro uživatele
+    user_article_counts = db.query(UserArticleCount).join(Article).filter(
+        UserArticleCount.user_id == current_user.id,
+        Article.is_active == True
+    ).all()
+    
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
-        "user": current_user
+        "user": current_user,
+        "active_articles": active_articles,
+        "user_article_counts": user_article_counts
     })
 
 @app.post("/add-count")
@@ -138,50 +167,56 @@ async def add_count(
     db.commit()
     return RedirectResponse(url="/dashboard", status_code=302)
 
-@app.get("/calculate-payment/{user_id}")
+@app.get("/calculate-payment/{user_id}", response_class=HTMLResponse)
 async def calculate_payment(
     request: Request,
     user_id: int,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Only allow users to see their own payment or admins
-    if current_user.id != user_id and not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Access denied")
-    
     user = db.query(User).filter(User.id == user_id).first()
-    settings = db.query(Settings).first()
-    if not settings:
-        settings = Settings()
-        db.add(settings)
-        db.commit()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     
-    # Calculate totals
-    beer_total = user.count * settings.beer_price
-    birell_total = user.birell_count * settings.birell_price
-    entry_total = user.entry_count * settings.entry_price
+    # Seskup podle platebního účtu
+    payment_groups = {}
+    user_counts = db.query(UserArticleCount).join(Article).filter(
+        UserArticleCount.user_id == user_id,
+        UserArticleCount.count > 0
+    ).all()
     
-    # Generate payment QR codes
-    drinks_total = beer_total + birell_total
-    drinks_qr = None
-    entry_qr = None
+    for count in user_counts:
+        # Použij účet z článku, nebo výchozí
+        account = count.article.payment_account
+        if not account:
+            account = "123456789/0100"  # Výchozí účet
+            
+        if account not in payment_groups:
+            payment_groups[account] = {"total": 0, "items": []}
+        
+        total = count.count * count.article.price
+        payment_groups[account]["total"] += total
+        payment_groups[account]["items"].append({
+            "name": count.article.name,
+            "emoji": count.article.emoji,
+            "count": count.count,
+            "price": count.article.price,
+            "total": total
+        })
     
-    if drinks_total > 0:
-        drinks_qr = generate_payment_qr(drinks_total, f"Piva a birelly - {user.username}", settings.payment_account)
-    
-    if entry_total > 0:
-        entry_qr = generate_payment_qr(entry_total, f"Vstupne - {user.username}", settings.payment_account)
+    # Generuj QR kódy pro každý účet
+    qr_codes = {}
+    for account, data in payment_groups.items():
+        if data["total"] > 0:
+            items_text = ", ".join([f"{item['count']}x {item['name']}" for item in data["items"]])
+            message = f"{items_text} - {user.username}"
+            print(f"Generating QR for account: {account}, amount: {data['total']}, message: {message}")  # Debug
+            qr_codes[account] = generate_payment_qr(data["total"], message, account)
     
     return templates.TemplateResponse("payment.html", {
         "request": request,
         "user": user,
-        "settings": settings,
-        "beer_total": beer_total,
-        "birell_total": birell_total,
-        "entry_total": entry_total,
-        "drinks_total": drinks_total,
-        "drinks_qr": drinks_qr,
-        "entry_qr": entry_qr
+        "payment_groups": payment_groups,
+        "qr_codes": qr_codes
     })
 
 @app.get("/qr/{user_id}", response_class=HTMLResponse)
@@ -213,13 +248,13 @@ async def admin_panel(
     db: Session = Depends(get_db)
 ):
     users = db.query(User).all()
-    total_count = sum(user.count for user in users)
+    ir iclesdb.dbtqly(Artcl.all()
     settings = db.query(Settings).first()
     
     return templates.TemplateResponse("admin.html", {
         "request": request,
         "users": users,
-        "total_count": total_count,
+        "ir iclesartericles
         "settings": settings
     })
 
@@ -295,3 +330,144 @@ async def logout():
     response = RedirectResponse(url="/", status_code=302)
     response.delete_cookie(key="access_token")
     return response
+
+@app.post("/add-article-count")
+async def add_article_count(
+    article_id: int = Form(...),
+    amount: int = Form(1),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Najdi nebo vytvoř počítadlo pro uživatele a článek
+    user_count = db.query(UserArticleCount).filter(
+        UserArticleCount.user_id == current_user.id,
+        UserArticleCount.article_id == article_id
+    ).first()
+    
+
+    if not user_count:
+        user_count = UserArticleCount(
+            user_id=current_user.id,
+            article_id=article_id,
+            count=0
+        )
+        db.add(user_count)
+    
+    user_count.count += amount
+    db.commit()
+    return RedirectResponse(url="/dashboard", status_code=302)
+
+@app.post("/admin/articles")
+async def create_article(
+    name: str = Form(...),
+    price: float = Form(...),
+    emoji: str = Form(...),
+    payment_account: str = Form(...),
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    article = Article(
+        name=name,
+        price=price,
+        emoji=emoji,
+        payment_account=payment_account
+    )
+    db.add(article)
+    db.commit()
+    return RedirectResponse(url="/admin", status_code=302)
+
+@app.post("/admin/articles/{article_id}")
+async def update_article(
+    article_id: int,
+    name: str = Form(...),
+    price: float = Form(...),
+    emoji: str = Form(...),
+    payment_account: str = Form(...),
+    is_active: bool = Form(False),
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    article = db.query(Article).filter(Article.id == article_id).first()
+    if article:
+        article.name = name
+        article.price = price
+        article.emoji = emoji
+        article.payment_account = payment_account
+        article.is_active = is_active
+        db.commit()
+    return RedirectResponse(url="/admin", status_code=302)
+
+@app.post("/admin/articles/{article_id}/delete")
+async def delete_article(
+    article_id: int,
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    # Smaž počty uživatelů pro tento článek
+    db.query(UserArticleCount).filter(UserArticleCount.article_id == article_id).delete()
+    # Smaž článek
+    db.query(Article).filter(Article.id == article_id).delete()
+    db.commit()
+    return RedirectResponse(url="/admin", status_code=302)
+
+
+@app.post("/admin/articles")
+async def create_article(
+    name: str = Form(...),
+    price: float = Form(...),
+    emoji: str = Form(...),
+    payment_account: str = Form(...),
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    article = Article(
+        name=name,
+        price=price,
+        emoji=emoji,
+        payment_account=payment_account
+    )
+    db.add(article)
+    db.commit()
+    return RedirectResponse(url="/admin", status_code=302)
+
+@app.post("/admin/articles/{article_id}")
+async def update_article(
+    article_id: int,
+    name: str = Form(...),
+    price: float = Form(...),
+    emoji: str = Form(...),
+    payment_account: str = Form(...),
+    is_active: bool = Form(False),
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    article = db.query(Article).filter(Article.id == article_id).first()
+    if article:
+        article.name = name
+        article.price = price
+        article.emoji = emoji
+        article.payment_account = payment_account
+        article.is_active = is_active
+        db.commit()
+    return RedirectResponse(url="/admin", status_code=302)
+
+@app.post("/admin/articles/{article_id}/delete")
+async def delete_article(
+    article_id: int,
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    # Smaž počty uživatelů pro tento článek
+    db.query(UserArticleCount).filter(UserArticleCount.article_id == article_id).delete()
+    # Smaž článek
+    db.query(Article).filter(Article.id == article_id).delete()
+    db.commit()
+    return RedirectResponse(url="/admin", status_code=302)
+
+
+
+
+
+
+
+

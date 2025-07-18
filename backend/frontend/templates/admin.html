@@ -137,12 +137,71 @@
                 </table>
             </div>
         </div>
+
+        <!-- Articles Management Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Správa článků</h2>
+            
+            <!-- Add New Article -->
+            <div class="mb-6 p-4 bg-gray-50 rounded">
+                <h3 class="font-semibold mb-3">Přidat nový článek</h3>
+                <form method="POST" action="/admin/articles" class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    <input type="text" name="name" placeholder="Název" class="border rounded px-3 py-2" required>
+                    <input type="number" name="price" step="0.01" placeholder="Cena" class="border rounded px-3 py-2" required>
+                    <input type="text" name="emoji" placeholder="Emoji" class="border rounded px-3 py-2" required>
+                    <input type="text" name="payment_account" placeholder="Platební účet" class="border rounded px-3 py-2" required>
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Přidat</button>
+                </form>
+            </div>
+            
+            <!-- Articles List -->
+            <div class="space-y-4">
+                {% for article in articles %}
+                <div class="border rounded p-4 {% if not article.is_active %}bg-gray-100{% endif %}">
+                    <form method="POST" action="/admin/articles/{{ article.id }}" class="grid grid-cols-1 md:grid-cols-6 gap-3 items-center">
+                        <div>
+                            <input type="text" name="name" value="{{ article.name }}" class="border rounded px-2 py-1 w-full">
+                        </div>
+                        <div>
+                            <input type="number" name="price" step="0.01" value="{{ article.price }}" class="border rounded px-2 py-1 w-full">
+                        </div>
+                        <div>
+                            <input type="text" name="emoji" value="{{ article.emoji }}" class="border rounded px-2 py-1 w-full">
+                        </div>
+                        <div>
+                            <input type="text" name="payment_account" value="{{ article.payment_account }}" class="border rounded px-2 py-1 w-full">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" name="is_active" {% if article.is_active %}checked{% endif %} class="mr-1">
+                                Aktivní
+                            </label>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">Uložit</button>
+                            <button type="button" onclick="deleteArticle({{ article.id }})" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">Smazat</button>
+                        </div>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 
     <script>
     function showPasswordReset(userId) {
         const form = document.getElementById('password-form-' + userId);
         form.classList.toggle('hidden');
+    }
+
+    function deleteArticle(articleId) {
+        if (confirm('Opravdu chcete smazat tento článek? Tím se smažou i všechny počty uživatelů pro tento článek.')) {
+            fetch(`/admin/articles/${articleId}/delete`, {
+                method: 'POST'
+            }).then(() => {
+                location.reload();
+            });
+        }
     }
     </script>
 </body>
