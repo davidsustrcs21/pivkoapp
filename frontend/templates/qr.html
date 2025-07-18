@@ -3,18 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR kód - {{ user.username }}</title>
+    <title>QR kód - Beer Counter</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body class="bg-gray-100 min-h-screen">
+    <nav class="bg-white shadow-sm border-b">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl font-bold text-gray-800">🍺 Beer Counter</h1>
+                <div class="flex items-center space-x-4">
+                    <a href="/dashboard" class="text-blue-600 hover:text-blue-800">Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
     <div class="container mx-auto px-4 py-8">
         <div class="max-w-md mx-auto">
-            <div class="text-center mb-6">
-                <a href="/dashboard" class="text-blue-600 hover:text-blue-800">← Zpět na dashboard</a>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-md p-6 text-center">
+            <div class="bg-white rounded-lg shadow-md p-6 text-center print-area">
                 <h1 class="text-2xl font-bold text-gray-800 mb-4">
                     QR kód pro {{ user.username }}
                 </h1>
@@ -30,17 +37,22 @@
                     </div>
                 </div>
                 
-                <div class="text-sm text-gray-500">
+                <div class="text-sm text-gray-500 mb-6">
                     <p>Naskenuj QR kód nebo použij odkaz pro rychlou registraci</p>
                 </div>
                 
-                <div class="mt-6">
-                    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                <div class="space-y-2">
+                    <button onclick="window.print()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                         Vytisknout
                     </button>
+                    <a href="/dashboard" class="block w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-center">
+                        Zpět na dashboard
+                    </a>
                 </div>
             </div>
         </div>
     </div>
+
+    <script src="/static/script.js"></script>
 </body>
 </html>

@@ -61,15 +61,24 @@
                 
                 <!-- Quick add buttons -->
                 <div class="mt-4 grid grid-cols-3 gap-2">
-                    <button onclick="addCount(1)" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded text-sm">
-                        +1
-                    </button>
-                    <button onclick="addCount(2)" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded text-sm">
-                        +2
-                    </button>
-                    <button onclick="addCount(5)" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded text-sm">
-                        +5
-                    </button>
+                    <form method="POST" action="/add-count" class="inline">
+                        <input type="hidden" name="amount" value="1">
+                        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded text-sm">
+                            +1
+                        </button>
+                    </form>
+                    <form method="POST" action="/add-count" class="inline">
+                        <input type="hidden" name="amount" value="2">
+                        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded text-sm">
+                            +2
+                        </button>
+                    </form>
+                    <form method="POST" action="/add-count" class="inline">
+                        <input type="hidden" name="amount" value="5">
+                        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded text-sm">
+                            +5
+                        </button>
+                    </form>
                 </div>
             </div>
 

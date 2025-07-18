@@ -5,7 +5,6 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from datetime import timedelta, datetime
 import os
-from pathlib import Path
 
 from .database import engine, get_db
 from .models import Base, User, CountEntry
@@ -20,21 +19,14 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Beer Counter")
 
-# Mount static files and templates with existence check
+# Mount static files and templates
 static_dir = "/app/frontend/static"
 templates_dir = "/app/frontend/templates"
 
 if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
-else:
-    print(f"Warning: Static directory {static_dir} not found")
 
-if os.path.exists(templates_dir):
-    templates = Jinja2Templates(directory=templates_dir)
-else:
-    # Create empty templates directory as fallback
-    Path(templates_dir).mkdir(parents=True, exist_ok=True)
-    templates = Jinja2Templates(directory=templates_dir)
+templates = Jinja2Templates(directory=templates_dir)
 
 # Create default admin user
 def create_default_admin():
@@ -214,6 +206,7 @@ async def logout():
     response = RedirectResponse(url="/", status_code=302)
     response.delete_cookie(key="token")
     return response
+
 
 
 
