@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from .database import Base
@@ -22,7 +22,7 @@ class CountEntry(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     amount = Column(Integer, default=1)
+    note = Column(Text, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
-    note = Column(String, nullable=True)
     
     user = relationship("User", back_populates="entries")
