@@ -195,6 +195,8 @@ async def calculate_payment(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
+    print(f"Calculating payment for user {user_id}: {user.username}")
+    
     # Seskup podle platebního účtu
     payment_groups = {}
     user_counts = db.query(UserArticleCount).join(Article).filter(
@@ -203,6 +205,10 @@ async def calculate_payment(
     ).all()
     
     print(f"Found {len(user_counts)} user counts for user {user_id}")
+    
+    # Debug: Zobraz všechny UserArticleCount pro tohoto uživatele
+    all_counts = db.query(UserArticleCount).filter(UserArticleCount.user_id == user_id).all()
+    print(f"All user counts for user {user_id}: {[(c.article_id, c.count) for c in all_counts]}")
     
     for count in user_counts:
         # Použij účet z článku, nebo výchozí
@@ -441,4 +447,8 @@ async def delete_article(
     db.query(Article).filter(Article.id == article_id).delete()
     db.commit()
     return RedirectResponse(url="/admin", status_code=302)
+
+
+
+
 
