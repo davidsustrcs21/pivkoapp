@@ -500,26 +500,68 @@ async def delete_article(
     db.commit()
     return RedirectResponse(url="/admin", status_code=302)
 
+def migrate_old_counts_to_articles():
+    """Migrace starých počtů do nového systému článků"""
+    db = next(get_db())
+    
+    beer_article = db.query(Article).filter(Article.name == "Pivo").first()
+    birell_article = db.query(Article).filter(Article.name == "Birell").first()
+    entry_article = db.query(Article).filter(Article.name == "Vstupné").first()
+    
+    users = db.query(User).all()
+    
+    for user in users:
+        # Migrace piv
+        if beer_article and user.count > 0:
+            existing = db.query(UserArticleCount).filter(
+                UserArticleCount.user_id == user.id,
+                UserArticleCount.article_id == beer_article.id
+            ).first()
+            
+            if not existing:
+                count = UserArticleCount(
+                    user_id=user.id,
+                    article_id=beer_article.id,
+                    count=user.count
+                )
+                db.add(count)
+        
+        # Migrace birellů
+        if birell_article and user.birell_count > 0:
+            existing = db.query(UserArticleCount).filter(
+                UserArticleCount.user_id == user.id,
+                UserArticleCount.article_id == birell_article.id
+            ).first()
+            
+            if not existing:
+                count = UserArticleCount(
+                    user_id=user.id,
+                    article_id=birell_article.id,
+                    count=user.birell_count
+                )
+                db.add(count)
+        
+        # Migrace vstupů
+        if entry_article and user.entry_count > 0:
+            existing = db.query(UserArticleCount).filter(
+                UserArticleCount.user_id == user.id,
+                UserArticleCount.article_id == entry_article.id
+            ).first()
+            
+            if not existing:
+                count = UserArticleCount(
+                    user_id=user.id,
+                    article_id=entry_article.id,
+                    count=user.entry_count
+                )
+                db.add(count)
+    
+    db.commit()
+    db.close()
+    print("Migrace dokončena!")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# Zavolejte tuto funkci jednou pro migraci dat
+ migrate_old_counts_to_articles()
 
 
 
