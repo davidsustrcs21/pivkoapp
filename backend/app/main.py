@@ -127,10 +127,9 @@ async def dashboard(
 ):
     # Získej aktivní články
     active_articles = db.query(Article).filter(Article.is_active == True).all()
-    print(f"Active articles: {len(active_articles)}")  # Debug
     
     # Získej nebo vytvoř počty pro uživatele
-    user_article_counts = []
+    user_counts = []
     for article in active_articles:
         count = db.query(UserArticleCount).filter(
             UserArticleCount.user_id == current_user.id,
@@ -148,15 +147,12 @@ async def dashboard(
             db.refresh(count)
         
         count.article = article  # Přidej článek pro template
-        user_article_counts.append(count)
-    
-    print(f"User article counts: {[(c.article.name, c.count) for c in user_article_counts]}")  # Debug
+        user_counts.append(count)
     
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
         "user": current_user,
-        "active_articles": active_articles,
-        "user_article_counts": user_article_counts
+        "user_counts": user_counts  # Změněno z user_article_counts
     })
 
 @app.post("/add-count")
@@ -444,6 +440,9 @@ async def logout():
     response = RedirectResponse(url="/", status_code=302)
     response.delete_cookie(key="access_token")
     return response
+
+
+
 
 
 
