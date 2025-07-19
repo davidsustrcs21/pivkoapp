@@ -39,15 +39,16 @@
                     <div class="text-sm text-gray-600 mb-4">{{ count.article.price }}Kč za kus</div>
                     
                     <div class="flex justify-center space-x-2">
-                        <form method="post" action="/add-item/{{ count.article.id }}/-1" class="inline">
-                            <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
-                                -
-                            </button>
+                        <form method="POST" action="/add-count" class="inline">
+                            <input type="hidden" name="article_id" value="{{ count.article.id }}">
+                            <input type="hidden" name="amount" value="-1">
+                            <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-xl">-</button>
                         </form>
-                        <form method="post" action="/add-item/{{ count.article.id }}/1" class="inline">
-                            <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
-                                +
-                            </button>
+                        
+                        <form method="POST" action="/add-count" class="inline">
+                            <input type="hidden" name="article_id" value="{{ count.article.id }}">
+                            <input type="hidden" name="amount" value="1">
+                            <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-xl">+</button>
                         </form>
                     </div>
                 </div>
@@ -68,6 +69,8 @@
     <script src="/static/script.js"></script>
 </body>
 </html>
+
+
 
 
 
