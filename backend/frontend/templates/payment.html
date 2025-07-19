@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platba - Beer Counter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="bg-white shadow-sm border-b">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl font-bold text-gray-800">🍺 Beer Counter</h1>
+                <a href="/dashboard" class="text-blue-600 hover:text-blue-800">Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto">
+            <h1 class="text-3xl font-bold text-center mb-8">Platba pro {{ user.username }}</h1>
+            
+            {% if payment_groups %}
+                {% for account, data in payment_groups.items() %}
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <h2 class="text-xl font-bold mb-4">Účet: {{ account }}</h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="font-semibold mb-3">Položky:</h3>
+                            {% for item in data.article_list %}
+                            <div class="flex justify-between py-1">
+                                <span>{{ item.emoji }} {{ item.count }}x {{ item.name }} ({{ item.price }}Kč)</span>
+                                <span class="font-bold">{{ item.total }}Kč</span>
+                            </div>
+                            {% endfor %}
+                            <hr class="my-2">
+                            <div class="flex justify-between font-bold text-lg">
+                                <span>Celkem:</span>
+                                <span>{{ data.total }}Kč</span>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center">
+                            {% if qr_codes[account] %}
+                            <img src="{{ qr_codes[account] }}" alt="QR kód pro platbu" class="mx-auto mb-4 max-w-full">
+                            <p class="text-sm text-gray-600 mb-2">Naskenujte QR kód v bankovní aplikaci</p>
+                            <p class="text-xs text-gray-500 bg-gray-100 p-2 rounded">Účet: {{ account }}</p>
+                            {% else %}
+                            <p class="text-red-600">QR kód se nepodařilo vygenerovat</p>
+                            <p class="text-xs text-gray-500 bg-gray-100 p-2 rounded">Účet: {{ account }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Žádné položky k platbě</h2>
+                    <p class="text-gray-600 mb-4">Nemáte žádné položky k zaplacení.</p>
+                    <a href="/dashboard" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Zpět na dashboard
+                    </a>
+                </div>
+            {% endif %}
+            
+            <div class="text-center mt-6">
+                <a href="/dashboard" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Zpět na dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+

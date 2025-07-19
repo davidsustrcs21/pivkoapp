@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8446:8000"
+    environment:
+      - DATABASE_URL=postgresql://beer_user:beer_password@db:5432/beer_counter
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=beer_counter
+      - POSTGRES_USER=beer_user
+      - POSTGRES_PASSWORD=beer_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+

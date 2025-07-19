@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Beer Counter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="bg-white shadow-sm border-b">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl font-bold text-gray-800">🍺 Beer Counter</h1>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-600">{{ user.username }}</span>
+                    {% if user.is_admin %}
+                        <a href="/admin" class="text-blue-600 hover:text-blue-800">Admin</a>
+                    {% endif %}
+                    <form method="POST" action="/logout" class="inline">
+                        <button type="submit" class="text-red-600 hover:text-red-800">Odhlásit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl font-bold text-center mb-8">Vítej, {{ user.username }}! 🍺</h1>
+            
+            <!-- Article counters -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {% for count in user_article_counts %}
+                <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                    <div class="text-4xl mb-2">{{ count.article.emoji }}</div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">{{ count.article.name }}</h3>
+                    <div class="text-3xl font-bold count-display mb-4">{{ count.count }}</div>
+                    <div class="text-sm text-gray-600 mb-4">{{ count.article.price }}Kč za kus</div>
+                    
+                    <div class="flex justify-center space-x-2">
+                        <form method="post" action="/add-item/{{ count.article.id }}/-1" class="inline">
+                            <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
+                                -
+                            </button>
+                        </form>
+                        <form method="post" action="/add-item/{{ count.article.id }}/1" class="inline">
+                            <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+                                +
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Payment section -->
+            <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Platba</h2>
+                <p class="text-gray-600 mb-4">Spočítej svou útratu a vygeneruj QR kód pro platbu</p>
+                <a href="/calculate-payment/{{ user.id }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">
+                    💳 Spočítat a zaplatit
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
