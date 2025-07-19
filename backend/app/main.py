@@ -161,27 +161,28 @@ async def dashboard(
 
 @app.post("/add-count")
 async def add_count(
+    article_id: int = Form(...),
     amount: int = Form(1),
-    entry_type: str = Form("beer"),
-    note: str = Form(""),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    entry = CountEntry(
-        user_id=current_user.id,
-        amount=amount,
-        entry_type=entry_type,
-        note=note if note else None
-    )
-    db.add(entry)
+    # Najdi nebo vytvoř počet pro uživatele a článek
+    count = db.query(UserArticleCount).filter(
+        UserArticleCount.user_id == current_user.id,
+        UserArticleCount.article_id == article_id
+    ).first()
     
-    # Update user counts based on type
-    if entry_type == "beer":
-        current_user.count += amount
-    elif entry_type == "birell":
-        current_user.birell_count += amount
-    elif entry_type == "entry":
-        current_user.entry_count += amount
+    if not count:
+        count = UserArticleCount(
+            user_id=current_user.id,
+            article_id=article_id,
+            count=0
+        )
+        db.add(count)
+    
+    count.count += amount
+    if count.count < 0:
+        count.count = 0
     
     db.commit()
     return RedirectResponse(url="/dashboard", status_code=302)
@@ -560,7 +561,9 @@ def migrate_old_counts_to_articles():
     db.close()
     print("Migrace dokončena!")
 # Zavolejte tuto funkci jednou pro migraci dat
-#migrate_old_counts_to_articles()
+migrate_old_counts_to_articles()
+
+
 
 
 
