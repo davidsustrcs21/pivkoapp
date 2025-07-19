@@ -278,7 +278,6 @@ async def admin_panel(
 ):
     users = db.query(User).all()
     articles = db.query(Article).all()
-    settings = db.query(Settings).first()
     
     # Spočítej celkové počty z UserArticleCount tabulky
     total_beer_count = 0
@@ -332,13 +331,10 @@ async def admin_panel(
             ).first()
             user.entry_count_new = count.count if count else 0
     
-    print(f"Admin stats - Beer: {total_beer_count}, Birell: {total_birell_count}, Entry: {total_entry_count}")
-    
     return templates.TemplateResponse("admin.html", {
         "request": request,
         "users": users,
         "articles": articles,
-        "settings": settings,
         "total_beer_count": total_beer_count,
         "total_birell_count": total_birell_count,
         "total_entry_count": total_entry_count
@@ -352,9 +348,6 @@ async def reset_user_count(
 ):
     user = db.query(User).filter(User.id == user_id).first()
     if user:
-        user.count = 0
-        user.birell_count = 0
-        user.entry_count = 0
         # Delete all entries
         db.query(CountEntry).filter(CountEntry.user_id == user_id).delete()
         # Reset article counts
@@ -363,7 +356,7 @@ async def reset_user_count(
     
     return RedirectResponse(url="/admin", status_code=302)
 
-@app.post("/admin/reset-password/{user_id}")
+@app.post("/admin/reset-user/{user_id}")
 async def reset_user_password(
     user_id: int,
     new_password: str = Form(...),
@@ -419,151 +412,5 @@ async def logout():
     response = RedirectResponse(url="/", status_code=302)
     response.delete_cookie(key="access_token")
     return response
-
-@app.post("/add-item/{article_id}/{amount}")
-async def add_item(
-    article_id: int,
-    amount: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    # Najdi nebo vytvoř počet pro uživatele a článek
-    count = db.query(UserArticleCount).filter(
-        UserArticleCount.user_id == current_user.id,
-        UserArticleCount.article_id == article_id
-    ).first()
-    
-    if not count:
-        count = UserArticleCount(
-            user_id=current_user.id,
-            article_id=article_id,
-            count=0
-        )
-        db.add(count)
-    
-    count.count += amount
-    if count.count < 0:
-        count.count = 0
-    
-    db.commit()
-    return RedirectResponse(url="/dashboard", status_code=302)
-
-@app.post("/admin/articles")
-async def create_article(
-    name: str = Form(...),
-    price: float = Form(...),
-    emoji: str = Form(...),
-    payment_account: str = Form(...),
-    admin_user: User = Depends(get_admin_user),
-    db: Session = Depends(get_db)
-):
-    article = Article(
-        name=name,
-        price=price,
-        emoji=emoji,
-        payment_account=payment_account
-    )
-    db.add(article)
-    db.commit()
-    return RedirectResponse(url="/admin", status_code=302)
-
-@app.post("/admin/articles/{article_id}")
-async def update_article(
-    article_id: int,
-    name: str = Form(...),
-    price: float = Form(...),
-    emoji: str = Form(...),
-    payment_account: str = Form(...),
-    is_active: bool = Form(False),
-    admin_user: User = Depends(get_admin_user),
-    db: Session = Depends(get_db)
-):
-    article = db.query(Article).filter(Article.id == article_id).first()
-    if article:
-        article.name = name
-        article.price = price
-        article.emoji = emoji
-        article.payment_account = payment_account
-        article.is_active = is_active
-        db.commit()
-    return RedirectResponse(url="/admin", status_code=302)
-
-@app.post("/admin/articles/{article_id}/delete")
-async def delete_article(
-    article_id: int,
-    admin_user: User = Depends(get_admin_user),
-    db: Session = Depends(get_db)
-):
-    # Smaž počty uživatelů pro tento článek
-    db.query(UserArticleCount).filter(UserArticleCount.article_id == article_id).delete()
-    # Smaž článek
-    db.query(Article).filter(Article.id == article_id).delete()
-    db.commit()
-    return RedirectResponse(url="/admin", status_code=302)
-
-def migrate_old_counts_to_articles():
-    """Migrace starých počtů do nového systému článků"""
-    db = next(get_db())
-    
-    beer_article = db.query(Article).filter(Article.name == "Pivo").first()
-    birell_article = db.query(Article).filter(Article.name == "Birell").first()
-    entry_article = db.query(Article).filter(Article.name == "Vstupné").first()
-    
-    users = db.query(User).all()
-    
-    for user in users:
-        # Migrace piv
-        if beer_article and user.count > 0:
-            existing = db.query(UserArticleCount).filter(
-                UserArticleCount.user_id == user.id,
-                UserArticleCount.article_id == beer_article.id
-            ).first()
-            
-            if not existing:
-                count = UserArticleCount(
-                    user_id=user.id,
-                    article_id=beer_article.id,
-                    count=user.count
-                )
-                db.add(count)
-        
-        # Migrace birellů
-        if birell_article and user.birell_count > 0:
-            existing = db.query(UserArticleCount).filter(
-                UserArticleCount.user_id == user.id,
-                UserArticleCount.article_id == birell_article.id
-            ).first()
-            
-            if not existing:
-                count = UserArticleCount(
-                    user_id=user.id,
-                    article_id=birell_article.id,
-                    count=user.birell_count
-                )
-                db.add(count)
-        
-        # Migrace vstupů
-        if entry_article and user.entry_count > 0:
-            existing = db.query(UserArticleCount).filter(
-                UserArticleCount.user_id == user.id,
-                UserArticleCount.article_id == entry_article.id
-            ).first()
-            
-            if not existing:
-                count = UserArticleCount(
-                    user_id=user.id,
-                    article_id=entry_article.id,
-                    count=user.entry_count
-                )
-                db.add(count)
-    
-    db.commit()
-    db.close()
-    print("Migrace dokončena!")
-# Zavolejte tuto funkci jednou pro migraci dat
-migrate_old_counts_to_articles()
-
-
-
 
 
