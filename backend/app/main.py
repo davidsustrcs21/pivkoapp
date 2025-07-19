@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from datetime import timedelta, datetime
 import os
 
@@ -278,10 +279,57 @@ async def admin_panel(
     articles = db.query(Article).all()
     settings = db.query(Settings).first()
     
-    # Spočítej celkové počty ze všech uživatelů
-    total_beer_count = sum(user.count for user in users)
-    total_birell_count = sum(user.birell_count for user in users)
-    total_entry_count = sum(user.entry_count for user in users)
+    # Spočítej celkové počty z UserArticleCount tabulky
+    total_beer_count = 0
+    total_birell_count = 0
+    total_entry_count = 0
+    
+    # Najdi články podle názvu
+    beer_article = db.query(Article).filter(Article.name == "Pivo").first()
+    birell_article = db.query(Article).filter(Article.name == "Birell").first()
+    entry_article = db.query(Article).filter(Article.name == "Vstupné").first()
+    
+    if beer_article:
+        total_beer_count = db.query(func.sum(UserArticleCount.count)).filter(
+            UserArticleCount.article_id == beer_article.id
+        ).scalar() or 0
+    
+    if birell_article:
+        total_birell_count = db.query(func.sum(UserArticleCount.count)).filter(
+            UserArticleCount.article_id == birell_article.id
+        ).scalar() or 0
+        
+    if entry_article:
+        total_entry_count = db.query(func.sum(UserArticleCount.count)).filter(
+            UserArticleCount.article_id == entry_article.id
+        ).scalar() or 0
+    
+    # Přidej počty článků k uživatelům
+    for user in users:
+        user.beer_count_new = 0
+        user.birell_count_new = 0
+        user.entry_count_new = 0
+        
+        if beer_article:
+            count = db.query(UserArticleCount).filter(
+                UserArticleCount.user_id == user.id,
+                UserArticleCount.article_id == beer_article.id
+            ).first()
+            user.beer_count_new = count.count if count else 0
+            
+        if birell_article:
+            count = db.query(UserArticleCount).filter(
+                UserArticleCount.user_id == user.id,
+                UserArticleCount.article_id == birell_article.id
+            ).first()
+            user.birell_count_new = count.count if count else 0
+            
+        if entry_article:
+            count = db.query(UserArticleCount).filter(
+                UserArticleCount.user_id == user.id,
+                UserArticleCount.article_id == entry_article.id
+            ).first()
+            user.entry_count_new = count.count if count else 0
     
     print(f"Admin stats - Beer: {total_beer_count}, Birell: {total_birell_count}, Entry: {total_entry_count}")
     
@@ -451,6 +499,10 @@ async def delete_article(
     db.query(Article).filter(Article.id == article_id).delete()
     db.commit()
     return RedirectResponse(url="/admin", status_code=302)
+
+
+
+
 
 
 
