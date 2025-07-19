@@ -278,11 +278,15 @@ async def admin_panel(
     articles = db.query(Article).all()
     settings = db.query(Settings).first()
     
+    # Spočítej celkové počty ze všech uživatelů
+    total_count = sum(user.count for user in users)
+    
     return templates.TemplateResponse("admin.html", {
         "request": request,
         "users": users,
         "articles": articles,
-        "settings": settings
+        "settings": settings,
+        "total_count": total_count
     })
 
 @app.post("/admin/reset-user/{user_id}")
@@ -441,4 +445,6 @@ async def delete_article(
     db.query(Article).filter(Article.id == article_id).delete()
     db.commit()
     return RedirectResponse(url="/admin", status_code=302)
+
+
 
