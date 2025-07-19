@@ -23,21 +23,24 @@ def generate_qr_code(data: str) -> str:
     return f"data:image/png;base64,{img_str}"
 
 def generate_payment_qr(amount: float, message: str, account: str) -> str:
-    """Generate payment QR code for Czech banking - minimal format"""
-    # Minimalistický formát kompatibilní s většinou bank
-    qr_data = f"SPD*1.0*ACC:{account}*AM:{amount:.2f}*CC:CZK"
+    """Generate payment QR code for Czech banking - test both formats"""
+    
+    # Zkusíme formát podle vašeho fungujícího příkladu z AirBank
+    # SPD*1.0*ACC:CZ7855000000001021238768*AM:1100.00*CC:CZK*X-URL:https://rb.cz
+    qr_data = f"SPD*1.0*ACC:{account}*AM:{amount:.2f}*CC:CZK*X-URL:https://example.com"
     
     print(f"=== QR CODE DEBUG ===")
     print(f"Account: {account}")
     print(f"Amount: {amount:.2f}")
+    print(f"Message: {message}")
     print(f"QR Data: {qr_data}")
     print(f"QR Data length: {len(qr_data)}")
     print("====================")
     
     qr = qrcode.QRCode(
-        version=1,
+        version=2,
         error_correction=qrcode.constants.ERROR_CORRECT_M,
-        box_size=10,
+        box_size=8,
         border=4,
     )
     qr.add_data(qr_data)
@@ -50,7 +53,6 @@ def generate_payment_qr(amount: float, message: str, account: str) -> str:
     img_str = base64.b64encode(buffer.getvalue()).decode()
     
     return f"data:image/png;base64,{img_str}"
-
 
 
 
