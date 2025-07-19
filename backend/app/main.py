@@ -279,14 +279,18 @@ async def admin_panel(
     settings = db.query(Settings).first()
     
     # Spočítej celkové počty ze všech uživatelů
-    total_count = sum(user.count for user in users)
+    total_beer_count = sum(user.count for user in users)
+    total_birell_count = sum(user.birell_count for user in users)
+    total_entry_count = sum(user.entry_count for user in users)
     
     return templates.TemplateResponse("admin.html", {
         "request": request,
         "users": users,
         "articles": articles,
         "settings": settings,
-        "total_count": total_count
+        "total_beer_count": total_beer_count,
+        "total_birell_count": total_birell_count,
+        "total_entry_count": total_entry_count
     })
 
 @app.post("/admin/reset-user/{user_id}")
@@ -445,6 +449,12 @@ async def delete_article(
     db.query(Article).filter(Article.id == article_id).delete()
     db.commit()
     return RedirectResponse(url="/admin", status_code=302)
+
+
+
+
+
+
 
 
 
