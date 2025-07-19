@@ -23,28 +23,13 @@ def generate_qr_code(data: str) -> str:
     return f"data:image/png;base64,{img_str}"
 
 def generate_payment_qr(amount: float, message: str, account: str) -> str:
-    """Generate payment QR code for Czech banking - correct SPAYD format"""
-    # Ořežeme zprávu pokud je příliš dlouhá
-    if len(message) > 60:
-        message = message[:57] + "..."
-    
-    # Pokud účet není v IBAN formátu, použijeme ho přímo
-    # SPAYD podporuje jak IBAN tak český formát
-    if not account.startswith('CZ'):
-        # Český formát účtu - použijeme přímo
-        account_formatted = account
-    else:
-        # IBAN formát
-        account_formatted = account
-    
-    # Správný formát podle vzoru
-    qr_data = f"SPD*1.0*ACC:{account_formatted}*AM:{amount:.2f}*CC:CZK*MSG:{message}"
+    """Generate payment QR code for Czech banking - working format"""
+    # Formát podle fungujícího vzoru
+    qr_data = f"SPD*1.0*ACC:{account}*AM:{amount:.2f}*CC:CZK"
     
     print(f"=== QR CODE DEBUG ===")
-    print(f"Original account: {account}")
-    print(f"Formatted account: {account_formatted}")
+    print(f"Account: {account}")
     print(f"Amount: {amount:.2f}")
-    print(f"Message: {message}")
     print(f"QR Data: {qr_data}")
     print(f"QR Data length: {len(qr_data)}")
     print("====================")
@@ -65,16 +50,4 @@ def generate_payment_qr(amount: float, message: str, account: str) -> str:
     img_str = base64.b64encode(buffer.getvalue()).decode()
     
     return f"data:image/png;base64,{img_str}"
-
-
-
-
-
-
-
-
-
-
-
-
 
