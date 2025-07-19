@@ -435,11 +435,63 @@ async def mark_paid(
     db.commit()
     return RedirectResponse(url="/admin", status_code=302)
 
+@app.post("/admin/articles")
+async def create_article(
+    name: str = Form(...),
+    price: float = Form(...),
+    emoji: str = Form(...),
+    payment_account: str = Form(...),
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    article = Article(
+        name=name,
+        price=price,
+        emoji=emoji,
+        payment_account=payment_account,
+        is_active=True
+    )
+    db.add(article)
+    db.commit()
+    
+    return RedirectResponse(url="/admin", status_code=302)
+
+@app.post("/admin/articles/{article_id}/delete")
+async def delete_article(
+    article_id: int,
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    article = db.query(Article).filter(Article.id == article_id).first()
+    if article:
+        # Smaž všechny počty pro tento článek
+        db.query(UserArticleCount).filter(UserArticleCount.article_id == article_id).delete()
+        # Smaž článek
+        db.delete(article)
+        db.commit()
+    
+    return RedirectResponse(url="/admin", status_code=302)
+
+@app.post("/admin/articles/{article_id}/toggle")
+async def toggle_article(
+    article_id: int,
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    article = db.query(Article).filter(Article.id == article_id).first()
+    if article:
+        article.is_active = not article.is_active
+        db.commit()
+    
+    return RedirectResponse(url="/admin", status_code=302)
+
 @app.post("/logout")
 async def logout():
     response = RedirectResponse(url="/", status_code=302)
     response.delete_cookie(key="access_token")
     return response
+
+
 
 
 
