@@ -45,9 +45,11 @@
                         <div class="text-center">
                             {% if qr_codes[account] %}
                             <img src="{{ qr_codes[account] }}" alt="QR kód pro platbu" class="mx-auto mb-4 max-w-full">
-                            <p class="text-sm text-gray-600">Naskenujte QR kód v bankovní aplikaci</p>
+                            <p class="text-sm text-gray-600 mb-2">Naskenujte QR kód v bankovní aplikaci</p>
+                            <p class="text-xs text-gray-500 bg-gray-100 p-2 rounded">Účet: {{ account }}</p>
                             {% else %}
                             <p class="text-red-600">QR kód se nepodařilo vygenerovat</p>
+                            <p class="text-xs text-gray-500 bg-gray-100 p-2 rounded">Účet: {{ account }}</p>
                             {% endif %}
                         </div>
                     </div>
@@ -72,6 +74,13 @@
     </div>
 </body>
 </html>
+
+
+
+
+
+
+
 
 
 
