@@ -101,9 +101,9 @@
                                     {% endif %}
                                 </div>
                             </td>
-                            <td class="px-4 py-2 text-center font-bold text-blue-600">{{ user.count }}</td>
-                            <td class="px-4 py-2 text-center font-bold text-green-600">{{ user.birell_count }}</td>
-                            <td class="px-4 py-2 text-center font-bold text-purple-600">{{ user.entry_count }}</td>
+                            <td class="px-4 py-2 text-center font-bold text-blue-600">{{ user.beer_count_new }}</td>
+                            <td class="px-4 py-2 text-center font-bold text-green-600">{{ user.birell_count_new }}</td>
+                            <td class="px-4 py-2 text-center font-bold text-purple-600">{{ user.entry_count_new }}</td>
                             <td class="px-4 py-2 text-center text-sm">{{ user.created_at.strftime('%d.%m.%Y') }}</td>
                             <td class="px-4 py-2 text-center">
                                 <div class="flex justify-center space-x-1 flex-wrap">
@@ -205,6 +205,8 @@
     </script>
 </body>
 </html>
+
+
 
 
 

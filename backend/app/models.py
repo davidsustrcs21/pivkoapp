@@ -12,9 +12,6 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     is_admin = Column(Boolean, default=False)
-    count = Column(Integer, default=0)
-    birell_count = Column(Integer, default=0)
-    entry_count = Column(Integer, default=0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     entries = relationship("CountEntry", back_populates="user")
@@ -63,3 +60,7 @@ class UserArticleCount(Base):
     
     user = relationship("User", back_populates="article_counts")
     article = relationship("Article")
+
+
+
+

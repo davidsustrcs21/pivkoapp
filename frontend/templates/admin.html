@@ -11,7 +11,7 @@
     <nav class="bg-white shadow-sm border-b">
         <div class="container mx-auto px-4 py-3">
             <div class="flex justify-between items-center">
-                <h1 class="text-xl font-bold text-gray-800">🍺 Beer Counter - Admin</h1>
+                <h1 class="text-xl font-bold text-gray-800">🍺 Admin Panel</h1>
                 <div class="flex items-center space-x-4">
                     <a href="/dashboard" class="text-blue-600 hover:text-blue-800">Dashboard</a>
                     <form method="POST" action="/logout" class="inline">
@@ -23,192 +23,90 @@
     </nav>
 
     <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold text-center mb-8">Admin Panel</h1>
-        
-        <!-- Settings section -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Nastavení cen a plateb</h2>
-            <form method="POST" action="/admin/settings" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Cena piva (Kč)</label>
-                    <input type="number" name="beer_price" value="{{ settings.beer_price if settings else 50 }}" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Cena birellu (Kč)</label>
-                    <input type="number" name="birell_price" value="{{ settings.birell_price if settings else 30 }}" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Cena vstupenky (Kč)</label>
-                    <input type="number" name="entry_price" value="{{ settings.entry_price if settings else 100 }}" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Číslo účtu</label>
-                    <input type="text" name="payment_account" value="{{ settings.payment_account if settings else '123456789/0100' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                </div>
-                <div class="md:col-span-2">
-                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Uložit nastavení</button>
-                </div>
-            </form>
-        </div>
-
         <!-- Statistics -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-4">Statistiky</h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="text-center">
-                    <div class="text-3xl font-bold text-blue-600">{{ total_beer_count }}</div>
+                    <div class="text-3xl font-bold text-blue-600">{{ users|length }}</div>
+                    <div class="text-gray-600">Celkem uživatelů</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-green-600">{{ total_count }}</div>
                     <div class="text-gray-600">Celkem piv</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-3xl font-bold text-green-600">{{ total_birell_count }}</div>
-                    <div class="text-gray-600">Celkem birellů</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-3xl font-bold text-purple-600">{{ total_entry_count }}</div>
-                    <div class="text-gray-600">Celkem vstupů</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-3xl font-bold text-orange-600">{{ users|length }}</div>
-                    <div class="text-gray-600">Celkem uživatelů</div>
+                    <div class="text-3xl font-bold text-yellow-600">{{ (total_count / users|length)|round(1) if users|length > 0 else 0 }}</div>
+                    <div class="text-gray-600">Průměr na uživatele</div>
                 </div>
             </div>
         </div>
 
-        <!-- Users table -->
+        <!-- Users Table -->
         <div class="bg-white rounded-lg shadow-md p-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-4">Správa uživatelů</h2>
             <div class="overflow-x-auto">
                 <table class="w-full table-auto">
-                    <thead class="bg-gray-50">
-                        <tr>
+                    <thead>
+                        <tr class="bg-gray-50">
                             <th class="px-4 py-2 text-left">Uživatel</th>
-                            <th class="px-4 py-2 text-center">🍺 Piva</th>
-                            <th class="px-4 py-2 text-center">🥤 Birelly</th>
-                            <th class="px-4 py-2 text-center">🎫 Vstupy</th>
-                            <th class="px-4 py-2 text-center">Registrace</th>
+                            <th class="px-4 py-2 text-center">Email</th>
+                            <th class="px-4 py-2 text-center">Počet piv</th>
+                            <th class="px-4 py-2 text-center">Role</th>
+                            <th class="px-4 py-2 text-center">QR kód</th>
                             <th class="px-4 py-2 text-center">Akce</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for user in users %}
-                        <tr class="border-t">
-                            <td class="px-4 py-2">
-                                <div>
-                                    <div class="font-medium">{{ user.username }}</div>
-                                    <div class="text-sm text-gray-500">{{ user.email }}</div>
+                            <tr class="border-b border-gray-100">
+                                <td class="px-4 py-2">
+                                    <span class="font-medium">{{ user.username }}</span>
+                                </td>
+                                <td class="px-4 py-2 text-center">
+                                    <span class="text-gray-600">{{ user.email }}</span>
+                                </td>
+                                <td class="px-4 py-2 text-center">
+                                    <span class="font-bold text-lg">{{ user.count }}</span> 🍺
+                                </td>
+                                <td class="px-4 py-2 text-center">
                                     {% if user.is_admin %}
-                                        <span class="inline-block bg-red-100 text-red-800 text-xs px-2 py-1 rounded">Admin</span>
+                                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm">Admin</span>
+                                    {% else %}
+                                        <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm">Uživatel</span>
                                     {% endif %}
-                                </div>
-                            </td>
-                            <td class="px-4 py-2 text-center font-bold text-blue-600">{{ user.beer_count_new }}</td>
-                            <td class="px-4 py-2 text-center font-bold text-green-600">{{ user.birell_count_new }}</td>
-                            <td class="px-4 py-2 text-center font-bold text-purple-600">{{ user.entry_count_new }}</td>
-                            <td class="px-4 py-2 text-center text-sm">{{ user.created_at.strftime('%d.%m.%Y') }}</td>
-                            <td class="px-4 py-2 text-center">
-                                <div class="flex justify-center space-x-1 flex-wrap">
-                                    <form method="POST" action="/admin/reset-user/{{ user.id }}" class="inline">
-                                        <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-xs mb-1">Reset</button>
-                                    </form>
-                                    
-                                    <button onclick="showPasswordReset({{ user.id }})" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs mb-1">Heslo</button>
-                                    
-                                    <a href="/calculate-payment/{{ user.id }}" class="bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded text-xs mb-1">Platba</a>
-                                    
-                                    {% if not user.is_admin %}
-                                    <form method="POST" action="/admin/delete-user/{{ user.id }}" class="inline" onsubmit="return confirm('Opravdu smazat uživatele {{ user.username }}?')">
-                                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs mb-1">Smazat</button>
-                                    </form>
-                                    {% endif %}
-                                </div>
-                                
-                                <div id="password-form-{{ user.id }}" class="hidden mt-2">
-                                    <form method="POST" action="/admin/reset-password/{{ user.id }}" class="flex gap-1">
-                                        <input type="password" name="new_password" placeholder="Nové heslo" class="text-xs px-1 py-1 border rounded" required>
-                                        <button type="submit" class="bg-green-500 text-white px-1 py-1 rounded text-xs">OK</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
+                                </td>
+                                <td class="px-4 py-2 text-center">
+                                    <a href="/qr/{{ user.id }}" class="text-blue-600 hover:text-blue-800">
+                                        Zobrazit
+                                    </a>
+                                </td>
+                                <td class="px-4 py-2 text-center">
+                                    <div class="flex justify-center space-x-2">
+                                        <form method="POST" action="/admin/reset-user/{{ user.id }}" class="inline">
+                                            <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-sm"
+                                                    onclick="return confirm('Opravdu chcete resetovat počet piv pro {{ user.username }}?')">
+                                                Reset
+                                            </button>
+                                        </form>
+                                        {% if not user.is_admin %}
+                                            <form method="POST" action="/admin/delete-user/{{ user.id }}" class="inline">
+                                                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-sm"
+                                                        onclick="return confirm('Opravdu chcete smazat uživatele {{ user.username }}?')">
+                                                    Smazat
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
-
-        <!-- Articles Management Section -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Správa článků</h2>
-            
-            <!-- Add New Article -->
-            <div class="mb-6 p-4 bg-gray-50 rounded">
-                <h3 class="font-semibold mb-3">Přidat nový článek</h3>
-                <form method="POST" action="/admin/articles" class="grid grid-cols-1 md:grid-cols-5 gap-3">
-                    <input type="text" name="name" placeholder="Název" class="border rounded px-3 py-2" required>
-                    <input type="number" name="price" step="0.01" placeholder="Cena" class="border rounded px-3 py-2" required>
-                    <input type="text" name="emoji" placeholder="Emoji" class="border rounded px-3 py-2" required>
-                    <input type="text" name="payment_account" placeholder="Platební účet" class="border rounded px-3 py-2" required>
-                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Přidat</button>
-                </form>
-            </div>
-            
-            <!-- Articles List -->
-            <div class="space-y-4">
-                {% for article in articles %}
-                <div class="border rounded p-4 {% if not article.is_active %}bg-gray-100{% endif %}">
-                    <form method="POST" action="/admin/articles/{{ article.id }}" class="grid grid-cols-1 md:grid-cols-6 gap-3 items-center">
-                        <div>
-                            <input type="text" name="name" value="{{ article.name }}" class="border rounded px-2 py-1 w-full">
-                        </div>
-                        <div>
-                            <input type="number" name="price" step="0.01" value="{{ article.price }}" class="border rounded px-2 py-1 w-full">
-                        </div>
-                        <div>
-                            <input type="text" name="emoji" value="{{ article.emoji }}" class="border rounded px-2 py-1 w-full">
-                        </div>
-                        <div>
-                            <input type="text" name="payment_account" value="{{ article.payment_account }}" class="border rounded px-2 py-1 w-full">
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <label class="flex items-center">
-                                <input type="checkbox" name="is_active" {% if article.is_active %}checked{% endif %} class="mr-1">
-                                Aktivní
-                            </label>
-                        </div>
-                        <div class="flex space-x-2">
-                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">Uložit</button>
-                            <button type="button" onclick="deleteArticle({{ article.id }})" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">Smazat</button>
-                        </div>
-                    </form>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
     </div>
 
-    <script>
-    function showPasswordReset(userId) {
-        const form = document.getElementById('password-form-' + userId);
-        form.classList.toggle('hidden');
-    }
-
-    function deleteArticle(articleId) {
-        if (confirm('Opravdu chcete smazat tento článek? Tím se smažou i všechny počty uživatelů pro tento článek.')) {
-            fetch(`/admin/articles/${articleId}/delete`, {
-                method: 'POST'
-            }).then(() => {
-                location.reload();
-            });
-       
- }
-    }
-    </script>
+    <script src="/static/script.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
