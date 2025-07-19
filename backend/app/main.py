@@ -560,7 +560,7 @@ def migrate_old_counts_to_articles():
     db.close()
     print("Migrace dokončena!")
 # Zavolejte tuto funkci jednou pro migraci dat
-migrate_old_counts_to_articles()
+#migrate_old_counts_to_articles()
 
 
 
