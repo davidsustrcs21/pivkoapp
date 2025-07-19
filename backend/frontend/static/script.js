@@ -8,4 +8,27 @@ document.addEventListener('DOMContentLoaded', function() {
             // Could add AJAX refresh here if needed
         }, 30000);
     }
+    
+    // Confirm dialogs for admin actions
+    const resetButtons = document.querySelectorAll('.reset-btn');
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    
+    resetButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            if (!confirm('Opravdu chcete resetovat počet piv pro tohoto uživatele?')) {
+                e.preventDefault();
+            }
+        });
+    });
 });
+
+// Dark mode toggle function
+function toggleDarkMode() {
+    if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.theme = 'light';
+    } else {
+        document.documentElement.classList.add('dark');
+        localStorage.theme = 'dark';
+    }
+}

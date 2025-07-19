@@ -5,17 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Beer Counter</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'selector'
+        }
+    </script>
     <link rel="stylesheet" href="/static/style.css">
+    <script>
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark')
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <nav class="bg-white shadow-sm border-b">
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen">
+    <nav class="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700">
         <div class="container mx-auto px-4 py-3">
             <div class="flex justify-between items-center">
-                <h1 class="text-xl font-bold text-gray-800">🍺 Beer Counter - Admin</h1>
+                <h1 class="text-xl font-bold text-gray-800 dark:text-white">🍺 Admin Panel</h1>
                 <div class="flex items-center space-x-4">
-                    <a href="/dashboard" class="text-blue-600 hover:text-blue-800">Dashboard</a>
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600">
+                        <span class="dark:hidden">🌙</span>
+                        <span class="hidden dark:inline">☀️</span>
+                    </button>
+                    <a href="/dashboard" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">Dashboard</a>
                     <form method="POST" action="/logout" class="inline">
-                        <button type="submit" class="text-red-600 hover:text-red-800">Odhlásit</button>
+                        <button type="submit" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300">Odhlásit</button>
                     </form>
                 </div>
             </div>
@@ -118,7 +134,7 @@
                                     <!-- Admin toggle -->
                                     <form method="POST" action="/admin/toggle-admin/{{ user.id }}" class="inline">
                                         <button type="submit" class="{% if user.is_admin %}bg-red-500 hover:bg-red-600{% else %}bg-green-500 hover:bg-green-600{% endif %} text-white px-2 py-1 rounded text-xs mb-1">
-                                            {% if user.is_admin %}Odebrat admin{% else %}Udělat admin{% endif %}
+                                            {% if user.is_admin %}Odebrat admina{% else %}Udělat adminem{% endif %}
                                         </button>
                                     </form>
                                     
@@ -231,5 +247,6 @@
     </script>
 </body>
 </html>
+
 
 
