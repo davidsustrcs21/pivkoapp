@@ -219,11 +219,11 @@ async def calculate_payment(
         print(f"Processing article: {count.article.name}, account: {account}, count: {count.count}")
             
         if account not in payment_groups:
-            payment_groups[account] = {"total": 0, "items": []}
+            payment_groups[account] = {"total": 0, "article_list": []}
         
         total = count.count * count.article.price
         payment_groups[account]["total"] += total
-        payment_groups[account]["items"].append({
+        payment_groups[account]["article_list"].append({
             "name": count.article.name,
             "emoji": count.article.emoji,
             "count": count.count,
@@ -237,7 +237,7 @@ async def calculate_payment(
     qr_codes = {}
     for account, data in payment_groups.items():
         if data["total"] > 0:
-            items_text = ", ".join([f"{item['count']}x {item['name']}" for item in data["items"]])
+            items_text = ", ".join([f"{item['count']}x {item['name']}" for item in data["article_list"]])
             message = f"{items_text} - {user.username}"
             print(f"Generating QR for account: {account}, amount: {data['total']}, message: {message}")
             qr_codes[account] = generate_payment_qr(data["total"], message, account)
@@ -447,6 +447,8 @@ async def delete_article(
     db.query(Article).filter(Article.id == article_id).delete()
     db.commit()
     return RedirectResponse(url="/admin", status_code=302)
+
+
 
 
 

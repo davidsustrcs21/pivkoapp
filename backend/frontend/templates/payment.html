@@ -29,7 +29,7 @@
                     <div class="grid md:grid-cols-2 gap-6">
                         <div>
                             <h3 class="font-semibold mb-3">Položky:</h3>
-                            {% for item in data.items %}
+                            {% for item in data.article_list %}
                             <div class="flex justify-between py-1">
                                 <span>{{ item.emoji }} {{ item.count }}x {{ item.name }} ({{ item.price }}Kč)</span>
                                 <span class="font-bold">{{ item.total }}Kč</span>
@@ -72,4 +72,10 @@
     </div>
 </body>
 </html>
+
+
+
+
+
+
 
