@@ -115,6 +115,16 @@
                                     
                                     <a href="/calculate-payment/{{ user.id }}" class="bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded text-xs mb-1">Platba</a>
                                     
+                                    <!-- Admin toggle -->
+                                    <form method="POST" action="/admin/toggle-admin/{{ user.id }}" class="inline">
+                                        <button type="submit" class="{% if user.is_admin %}bg-red-500 hover:bg-red-600{% else %}bg-green-500 hover:bg-green-600{% endif %} text-white px-2 py-1 rounded text-xs mb-1">
+                                            {% if user.is_admin %}Odebrat admin{% else %}Udělat admin{% endif %}
+                                        </button>
+                                    </form>
+                                    
+                                    <!-- Payment checkboxes -->
+                                    <button onclick="showPaymentForm({{ user.id }})" class="bg-purple-500 hover:bg-purple-600 text-white px-2 py-1 rounded text-xs mb-1">Zaplaceno</button>
+                                    
                                     {% if not user.is_admin %}
                                     <form method="POST" action="/admin/delete-user/{{ user.id }}" class="inline" onsubmit="return confirm('Opravdu smazat uživatele {{ user.username }}?')">
                                         <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs mb-1">Smazat</button>
@@ -126,6 +136,18 @@
                                     <form method="POST" action="/admin/reset-password/{{ user.id }}" class="flex gap-1">
                                         <input type="password" name="new_password" placeholder="Nové heslo" class="text-xs px-1 py-1 border rounded" required>
                                         <button type="submit" class="bg-green-500 text-white px-1 py-1 rounded text-xs">OK</button>
+                                    </form>
+                                </div>
+                                
+                                <div id="payment-form-{{ user.id }}" class="hidden mt-2">
+                                    <form method="POST" action="/admin/mark-paid/{{ user.id }}" class="space-y-1">
+                                        {% for article in articles %}
+                                        <label class="flex items-center text-xs">
+                                            <input type="checkbox" name="article_ids" value="{{ article.id }}" class="mr-1">
+                                            {{ article.emoji }} {{ article.name }}
+                                        </label>
+                                        {% endfor %}
+                                        <button type="submit" class="bg-green-500 text-white px-2 py-1 rounded text-xs w-full">Označit jako zaplaceno</button>
                                     </form>
                                 </div>
                             </td>
@@ -192,6 +214,11 @@
         form.classList.toggle('hidden');
     }
 
+    function showPaymentForm(userId) {
+        const form = document.getElementById('payment-form-' + userId);
+        form.classList.toggle('hidden');
+    }
+
     function deleteArticle(articleId) {
         if (confirm('Opravdu chcete smazat tento článek? Tím se smažou i všechny počty uživatelů pro tento článek.')) {
             fetch(`/admin/articles/${articleId}/delete`, {
@@ -199,16 +226,10 @@
             }).then(() => {
                 location.reload();
             });
-       
- }
+        }
     }
     </script>
 </body>
 </html>
-
-
-
-
-
 
 

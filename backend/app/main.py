@@ -407,10 +407,43 @@ async def update_settings(
     
     return RedirectResponse(url="/admin", status_code=302)
 
+@app.post("/admin/toggle-admin/{user_id}")
+async def toggle_admin(
+    user_id: int,
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if user and user.id != admin_user.id:  # Nemůže odebrat admin práva sobě
+        user.is_admin = not user.is_admin
+        db.commit()
+    
+    return RedirectResponse(url="/admin", status_code=302)
+
+@app.post("/admin/mark-paid/{user_id}")
+async def mark_paid(
+    user_id: int,
+    article_ids: list[int] = Form(...),
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    for article_id in article_ids:
+        count = db.query(UserArticleCount).filter(
+            UserArticleCount.user_id == user_id,
+            UserArticleCount.article_id == article_id
+        ).first()
+        
+        if count:
+            count.count = 0  # Vynuluj počet = označit jako zaplaceno
+    
+    db.commit()
+    return RedirectResponse(url="/admin", status_code=302)
+
 @app.post("/logout")
 async def logout():
     response = RedirectResponse(url="/", status_code=302)
     response.delete_cookie(key="access_token")
     return response
+
 
 

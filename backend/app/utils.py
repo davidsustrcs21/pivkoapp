@@ -23,36 +23,25 @@ def generate_qr_code(data: str) -> str:
     return f"data:image/png;base64,{img_str}"
 
 def generate_payment_qr(amount: float, message: str, account: str) -> str:
-    """Generate payment QR code for Czech banking - test both formats"""
+    """Generate QR code for bank payment with account number"""
+    # Formát pro české banky (SPAYD)
+    payment_string = f"SPD*1.0*ACC:{account}*AM:{amount:.2f}*CC:CZK*MSG:{message}"
     
-    # Zkusíme formát podle vašeho fungujícího příkladu z AirBank
-    # SPD*1.0*ACC:CZ7855000000001021238768*AM:1100.00*CC:CZK*X-URL:https://rb.cz
-    qr_data = f"SPD*1.0*ACC:{account}*AM:{amount:.2f}*CC:CZK*X-URL:https://example.com"
-    
-    print(f"=== QR CODE DEBUG ===")
-    print(f"Account: {account}")
-    print(f"Amount: {amount:.2f}")
-    print(f"Message: {message}")
-    print(f"QR Data: {qr_data}")
-    print(f"QR Data length: {len(qr_data)}")
-    print("====================")
-    
-    qr = qrcode.QRCode(
-        version=2,
-        error_correction=qrcode.constants.ERROR_CORRECT_M,
-        box_size=8,
-        border=4,
-    )
-    qr.add_data(qr_data)
+    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    qr.add_data(payment_string)
     qr.make(fit=True)
     
     img = qr.make_image(fill_color="black", back_color="white")
     
-    buffer = io.BytesIO()
+    buffer = BytesIO()
     img.save(buffer, format='PNG')
-    img_str = base64.b64encode(buffer.getvalue()).decode()
+    buffer.seek(0)
     
-    return f"data:image/png;base64,{img_str}"
+    img_base64 = base64.b64encode(buffer.getvalue()).decode()
+    return f"data:image/png;base64,{img_base64}"
+
+
+
 
 
 
