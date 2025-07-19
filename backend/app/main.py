@@ -126,7 +126,7 @@ async def dashboard(
 ):
     # Získej aktivní články
     active_articles = db.query(Article).filter(Article.is_active == True).all()
-    print(f"Active articles: {len(active_articles)}")
+    print(f"Active articles: {len(active_articles)}")  # Debug
     
     # Získej nebo vytvoř počty pro uživatele
     user_article_counts = []
@@ -146,10 +146,10 @@ async def dashboard(
             db.commit()
             db.refresh(count)
         
-        count.article = article
+        count.article = article  # Přidej článek pro template
         user_article_counts.append(count)
     
-    print(f"User article counts: {[(c.article.name, c.count) for c in user_article_counts]}")
+    print(f"User article counts: {[(c.article.name, c.count) for c in user_article_counts]}")  # Debug
     
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
@@ -195,8 +195,6 @@ async def calculate_payment(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    print(f"Calculating payment for user {user_id}: {user.username}")
-    
     # Seskup podle platebního účtu
     payment_groups = {}
     user_counts = db.query(UserArticleCount).join(Article).filter(
@@ -204,26 +202,22 @@ async def calculate_payment(
         UserArticleCount.count > 0
     ).all()
     
-    print(f"Found {len(user_counts)} user counts for user {user_id}")
-    
-    # Debug: Zobraz všechny UserArticleCount pro tohoto uživatele
-    all_counts = db.query(UserArticleCount).filter(UserArticleCount.user_id == user_id).all()
-    print(f"All user counts for user {user_id}: {[(c.article_id, c.count) for c in all_counts]}")
+    print(f"Found {len(user_counts)} user counts for user {user_id}")  # Debug
     
     for count in user_counts:
         # Použij účet z článku, nebo výchozí
         account = count.article.payment_account
         if not account:
-            account = "123456789/0100"
+            account = "123456789/0100"  # Výchozí účet
             
-        print(f"Processing article: {count.article.name}, account: {account}, count: {count.count}")
+        print(f"Processing article: {count.article.name}, account: {account}, count: {count.count}")  # Debug
             
         if account not in payment_groups:
-            payment_groups[account] = {"total": 0, "article_list": []}
+            payment_groups[account] = {"total": 0, "items": []}
         
         total = count.count * count.article.price
         payment_groups[account]["total"] += total
-        payment_groups[account]["article_list"].append({
+        payment_groups[account]["items"].append({
             "name": count.article.name,
             "emoji": count.article.emoji,
             "count": count.count,
@@ -231,19 +225,19 @@ async def calculate_payment(
             "total": total
         })
     
-    print(f"Payment groups: {payment_groups}")
+    print(f"Payment groups: {payment_groups}")  # Debug
     
     # Generuj QR kódy pro každý účet
     qr_codes = {}
     for account, data in payment_groups.items():
         if data["total"] > 0:
-            items_text = ", ".join([f"{item['count']}x {item['name']}" for item in data["article_list"]])
+            items_text = ", ".join([f"{item['count']}x {item['name']}" for item in data["items"]])
             message = f"{items_text} - {user.username}"
-            print(f"Generating QR for account: {account}, amount: {data['total']}, message: {message}")
+            print(f"Generating QR for account: {account}, amount: {data['total']}, message: {message}")  # Debug
             qr_codes[account] = generate_payment_qr(data["total"], message, account)
-            print(f"QR code generated for {account}: {len(qr_codes[account])} chars")
+            print(f"QR code generated for {account}: {len(qr_codes[account])} chars")  # Debug
     
-    print(f"QR codes: {list(qr_codes.keys())}")
+    print(f"QR codes: {list(qr_codes.keys())}")  # Debug
     
     return templates.TemplateResponse("payment.html", {
         "request": request,
@@ -277,25 +271,18 @@ async def user_qr(
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_panel(
     request: Request,
-    current_user: User = Depends(get_admin_user),
+    admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
     users = db.query(User).all()
-    
-    # Spočítej celkové počty ze všech uživatelů
-    total_count = sum(user.count for user in users)
-    total_beer_count = sum(user.count for user in users)
-    total_birell_count = sum(user.birell_count for user in users)
-    total_entry_count = sum(user.entry_count for user in users)
+    articles = db.query(Article).all()
+    settings = db.query(Settings).first()
     
     return templates.TemplateResponse("admin.html", {
         "request": request,
-        "user": current_user,
         "users": users,
-        "total_count": total_count,  # Pro kompatibilitu se starým template
-        "total_beer_count": total_beer_count,
-        "total_birell_count": total_birell_count,
-        "total_entry_count": total_entry_count
+        "articles": articles,
+        "settings": settings
     })
 
 @app.post("/admin/reset-user/{user_id}")
@@ -454,9 +441,4 @@ async def delete_article(
     db.query(Article).filter(Article.id == article_id).delete()
     db.commit()
     return RedirectResponse(url="/admin", status_code=302)
-
-
-
-
-
 
