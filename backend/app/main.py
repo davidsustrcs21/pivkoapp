@@ -277,18 +277,23 @@ async def user_qr(
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_panel(
     request: Request,
-    admin_user: User = Depends(get_admin_user),
+    current_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
     users = db.query(User).all()
-    articles = db.query(Article).all()
-    settings = db.query(Settings).first()
+    
+    # Spočítej celkové počty
+    total_beer_count = sum(user.count for user in users)
+    total_birell_count = sum(user.birell_count for user in users)
+    total_entry_count = sum(user.entry_count for user in users)
     
     return templates.TemplateResponse("admin.html", {
         "request": request,
+        "user": current_user,
         "users": users,
-        "articles": articles,
-        "settings": settings
+        "total_beer_count": total_beer_count,
+        "total_birell_count": total_birell_count,
+        "total_entry_count": total_entry_count
     })
 
 @app.post("/admin/reset-user/{user_id}")
@@ -447,6 +452,8 @@ async def delete_article(
     db.query(Article).filter(Article.id == article_id).delete()
     db.commit()
     return RedirectResponse(url="/admin", status_code=302)
+
+
 
 
 
