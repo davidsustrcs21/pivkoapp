@@ -485,11 +485,34 @@ async def toggle_article(
     
     return RedirectResponse(url="/admin", status_code=302)
 
+@app.post("/admin/articles/{article_id}")
+async def update_article(
+    article_id: int,
+    name: str = Form(...),
+    price: float = Form(...),
+    emoji: str = Form(...),
+    payment_account: str = Form(...),
+    is_active: bool = Form(False),
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    article = db.query(Article).filter(Article.id == article_id).first()
+    if article:
+        article.name = name
+        article.price = price
+        article.emoji = emoji
+        article.payment_account = payment_account
+        article.is_active = is_active
+        db.commit()
+    
+    return RedirectResponse(url="/admin", status_code=302)
+
 @app.post("/logout")
 async def logout():
     response = RedirectResponse(url="/", status_code=302)
     response.delete_cookie(key="access_token")
     return response
+
 
 
 
