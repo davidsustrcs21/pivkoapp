@@ -282,7 +282,8 @@ async def admin_panel(
 ):
     users = db.query(User).all()
     
-    # Spočítej celkové počty
+    # Spočítej celkové počty ze všech uživatelů
+    total_count = sum(user.count for user in users)
     total_beer_count = sum(user.count for user in users)
     total_birell_count = sum(user.birell_count for user in users)
     total_entry_count = sum(user.entry_count for user in users)
@@ -291,6 +292,7 @@ async def admin_panel(
         "request": request,
         "user": current_user,
         "users": users,
+        "total_count": total_count,  # Pro kompatibilitu se starým template
         "total_beer_count": total_beer_count,
         "total_birell_count": total_birell_count,
         "total_entry_count": total_entry_count
@@ -452,9 +454,6 @@ async def delete_article(
     db.query(Article).filter(Article.id == article_id).delete()
     db.commit()
     return RedirectResponse(url="/admin", status_code=302)
-
-
-
 
 
 
