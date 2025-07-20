@@ -135,32 +135,66 @@ async def register_page(request: Request, ref: Optional[str] = None, db: Session
 
 @app.post("/register")
 async def register(
+    request: Request,
     username: str = Form(...),
     email: str = Form(...),
     password: str = Form(...),
     ref: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    # Ověř referenční kód
-    ref_user = db.query(User).filter(User.username == ref).first()
-    if not ref_user:
-        raise HTTPException(status_code=400, detail="Neplatný referenční kód")
-    
-    # Check if user exists
-    if db.query(User).filter(User.username == username).first():
-        raise HTTPException(status_code=400, detail="Username already exists")
-    if db.query(User).filter(User.email == email).first():
-        raise HTTPException(status_code=400, detail="Email already exists")
-    
-    user = User(
-        username=username,
-        email=email,
-        hashed_password=get_password_hash(password)
-    )
-    db.add(user)
-    db.commit()
-    
-    return RedirectResponse(url="/login?registered=true", status_code=302)
+    try:
+        # Ověř referenční kód
+        ref_user = db.query(User).filter(User.username == ref).first()
+        if not ref_user:
+            return templates.TemplateResponse("error.html", {
+                "request": request,
+                "title": "Neplatný referenční kód",
+                "emoji": "❌",
+                "message": "Referenční kód není platný",
+                "detail": "Požádejte o nový QR kód pro registraci.",
+                "show_login": True
+            })
+        
+        # Check if user exists
+        if db.query(User).filter(User.username == username).first():
+            return templates.TemplateResponse("error.html", {
+                "request": request,
+                "title": "Uživatel již existuje",
+                "emoji": "👤",
+                "message": "Uživatelské jméno je již obsazené",
+                "detail": "Zvolte prosím jiné uživatelské jméno.",
+                "show_login": False
+            })
+            
+        if db.query(User).filter(User.email == email).first():
+            return templates.TemplateResponse("error.html", {
+                "request": request,
+                "title": "Email již existuje",
+                "emoji": "📧",
+                "message": "Email je již registrovaný",
+                "detail": "Použijte jiný email nebo se přihlaste.",
+                "show_login": True
+            })
+        
+        user = User(
+            username=username,
+            email=email,
+            hashed_password=get_password_hash(password)
+        )
+        db.add(user)
+        db.commit()
+        
+        return RedirectResponse(url="/login?registered=true", status_code=302)
+        
+    except Exception as e:
+        return templates.TemplateResponse("error.html", {
+            "request": request,
+            "title": "Chyba registrace",
+            "emoji": "⚠️",
+            "message": "Nepodařilo se vytvořit účet",
+            "detail": "Zkuste to prosím znovu.",
+            "show_login": False
+        })
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(
@@ -657,6 +691,7 @@ async def unauthorized_handler(request: Request, exc: HTTPException):
         "detail": "Pro pokračování se prosím přihlaste.",
         "show_login": True
     }, status_code=401)
+
 
 
 
