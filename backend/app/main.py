@@ -355,7 +355,7 @@ async def reset_user_count(
     
     return RedirectResponse(url="/admin", status_code=302)
 
-@app.post("/admin/reset-user/{user_id}")
+@app.post("/admin/reset-password/{user_id}")
 async def reset_user_password(
     user_id: int,
     new_password: str = Form(...),
@@ -606,6 +606,8 @@ async def download_user_pdf_weasy(
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=rozuctovani_{user.username}_weasy.pdf"}
     )
+
+
 
 
 
