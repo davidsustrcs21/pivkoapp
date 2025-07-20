@@ -66,7 +66,7 @@ def generate_user_report_pdf(user, user_counts, total_amount):
     story = []
     
     # Title
-    title = Paragraph(f" Rozúčtování pro {user.username} za Odry", title_style)
+    title = Paragraph(f"🍺 Rozúčtování pro {user.username}", title_style)
     story.append(title)
     story.append(Spacer(1, 20))
     
@@ -178,7 +178,7 @@ def generate_admin_summary_pdf(users_data, articles):
     story = []
     
     # Title
-    title = Paragraph(" Celkový přehled spotřeby", title_style)
+    title = Paragraph("🍺 Celkový přehled spotřeby", title_style)
     story.append(title)
     story.append(Spacer(1, 20))
     

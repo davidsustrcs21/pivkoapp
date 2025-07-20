@@ -133,7 +133,7 @@ def generate_user_report_pdf_weasy(user, user_counts, total_amount):
         </style>
     </head>
     <body>
-        <h1> Rozúčtování pro {user.username}</h1>
+        <h1>🍺 Rozúčtování pro {user.username}</h1>
         
         <div class="date">
             Datum: {datetime.now().strftime('%d.%m.%Y %H:%M')}
@@ -160,7 +160,7 @@ def generate_user_report_pdf_weasy(user, user_counts, total_amount):
         {qr_sections}
         
         <div class="footer">
-            Děkujeme za návštěvu! 
+            Děkujeme za návštěvu! 🍻
         </div>
     </body>
     </html>
