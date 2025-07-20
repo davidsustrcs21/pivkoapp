@@ -1,10 +1,10 @@
-from fastapi import FastAPI, Depends, HTTPException, Form, Request, Response
-from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
-from fastapi.staticfiles import StaticFiles
+from typing import Optional
+from fastapi import FastAPI, Depends, HTTPException, Request, Response, Form, status
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-from datetime import timedelta, datetime
+from datetime import timedelta
 import os
 import io
 
@@ -104,7 +104,7 @@ async def login(
     return response
 
 @app.get("/register", response_class=HTMLResponse)
-async def register_page(request: Request, ref: str = None):
+async def register_page(request: Request, ref: Optional[str] = None, db: Session = Depends(get_db)):
     if not ref:
         return templates.TemplateResponse("error.html", {
             "request": request,
@@ -116,7 +116,6 @@ async def register_page(request: Request, ref: str = None):
         })
     
     # Ověř, že referenční uživatel existuje
-    db = next(get_db())
     ref_user = db.query(User).filter(User.username == ref).first()
     if not ref_user:
         return templates.TemplateResponse("error.html", {
@@ -658,6 +657,8 @@ async def unauthorized_handler(request: Request, exc: HTTPException):
         "detail": "Pro pokračování se prosím přihlaste.",
         "show_login": True
     }, status_code=401)
+
+
 
 
 
