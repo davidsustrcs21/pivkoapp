@@ -12,14 +12,33 @@ from .utils import generate_payment_qr
 
 # Registrace fontu pro UTF-8 podporu
 try:
-    pdfmetrics.registerFont(TTFont('DejaVuSans', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'))
-    pdfmetrics.registerFont(TTFont('DejaVuSans-Bold', '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'))
-    DEFAULT_FONT = 'DejaVuSans'
-    BOLD_FONT = 'DejaVuSans-Bold'
+    # Zkus různé možné cesty k DejaVu fontům
+    font_paths = [
+        '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+        '/usr/share/fonts/dejavu/DejaVuSans.ttf',
+        '/System/Library/Fonts/DejaVuSans.ttf'
+    ]
+    
+    font_found = False
+    for font_path in font_paths:
+        try:
+            pdfmetrics.registerFont(TTFont('DejaVuSans', font_path))
+            pdfmetrics.registerFont(TTFont('DejaVuSans-Bold', font_path.replace('.ttf', '-Bold.ttf')))
+            DEFAULT_FONT = 'DejaVuSans'
+            BOLD_FONT = 'DejaVuSans-Bold'
+            font_found = True
+            break
+        except:
+            continue
+    
+    if not font_found:
+        raise Exception("DejaVu fonts not found")
+        
 except:
     # Fallback na standardní fonty
     DEFAULT_FONT = 'Helvetica'
     BOLD_FONT = 'Helvetica-Bold'
+    print("Warning: Using fallback fonts, Czech characters may not display correctly")
 
 def generate_user_report_pdf(user, user_counts, total_amount):
     """Generate PDF report for user consumption with QR codes"""
@@ -198,6 +217,7 @@ def generate_admin_summary_pdf(users_data, articles):
     doc.build(story)
     buffer.seek(0)
     return buffer
+
 
 
 
