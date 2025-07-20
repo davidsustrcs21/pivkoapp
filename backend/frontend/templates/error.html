@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chyba - Beer Counter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-md mx-auto">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-red-600">❌ {{ title or "Chyba" }}</h1>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="text-center mb-6">
+                    <div class="text-6xl mb-4">{{ emoji or "⚠️" }}</div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-2">{{ message or "Něco se pokazilo" }}</h2>
+                    <p class="text-gray-600">{{ detail or "Zkuste to prosím znovu." }}</p>
+                </div>
+                
+                <div class="space-y-3">
+                    {% if show_login %}
+                    <a href="/login" class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-center">
+                        🔑 Přihlásit se znovu
+                    </a>
+                    {% endif %}
+                    
+                    {% if show_register %}
+                    <a href="/register" class="block w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-center">
+                        👤 Registrovat se
+                    </a>
+                    {% endif %}
+                    
+                    <a href="/" class="block w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-center">
+                        🏠 Hlavní stránka
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/script.js"></script>
+</body>
+</html>
