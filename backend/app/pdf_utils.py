@@ -135,5 +135,69 @@ def generate_user_report_pdf(user, user_counts, total_amount):
     buffer.seek(0)
     return buffer
 
+def generate_admin_summary_pdf(users_data, articles):
+    """Generate PDF summary for admin"""
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=18,
+        spaceAfter=30,
+        alignment=1,
+        fontName=BOLD_FONT
+    )
+    
+    normal_style = ParagraphStyle(
+        'CustomNormal',
+        parent=styles['Normal'],
+        fontName=DEFAULT_FONT
+    )
+    
+    story = []
+    
+    # Title
+    title = Paragraph("🍺 Celkový přehled spotřeby", title_style)
+    story.append(title)
+    story.append(Spacer(1, 20))
+    
+    # Date
+    date_text = f"Datum: {datetime.now().strftime('%d.%m.%Y %H:%M')}"
+    story.append(Paragraph(date_text, normal_style))
+    story.append(Spacer(1, 20))
+    
+    # Users table
+    data = [['Uživatel'] + [f"{art.emoji} {art.name}" for art in articles] + ['Celkem']]
+    
+    for user_data in users_data:
+        row = [user_data['username']]
+        total = 0
+        for article in articles:
+            count = user_data.get(f'article_{article.id}', 0)
+            row.append(str(count))
+            total += count * article.price
+        row.append(f"{total} Kč")
+        data.append(row)
+    
+    table = Table(data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), BOLD_FONT),
+        ('FONTNAME', (0, 1), (-1, -1), DEFAULT_FONT),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    
+    story.append(table)
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
 
 
