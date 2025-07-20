@@ -1,11 +1,12 @@
 from fastapi import FastAPI, Depends, HTTPException, Form, Request, Response
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import timedelta, datetime
 import os
+import io
 
 from .database import engine, get_db
 from .models import Base, User, CountEntry, Settings, Article, UserArticleCount
@@ -14,6 +15,7 @@ from .auth import (
     get_current_user, get_admin_user, ACCESS_TOKEN_EXPIRE_MINUTES
 )
 from .utils import generate_qr_code, generate_payment_qr
+from .pdf_utils import generate_user_report_pdf, generate_admin_summary_pdf
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -513,10 +515,66 @@ async def logout():
     response.delete_cookie(key="access_token")
     return response
 
+@app.get("/pdf/user/{user_id}")
+async def download_user_pdf(
+    user_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Uživatel může stáhnout pouze svůj PDF nebo admin může stáhnout jakýkoliv
+    if current_user.id != user_id and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get user counts
+    user_counts = db.query(UserArticleCount).join(Article).filter(
+        UserArticleCount.user_id == user_id,
+        UserArticleCount.count > 0
+    ).all()
+    
+    # Calculate total
+    total_amount = sum(count.count * count.article.price for count in user_counts)
+    
+    # Generate PDF
+    pdf_buffer = generate_user_report_pdf(user, user_counts, total_amount)
+    
+    return StreamingResponse(
+        io.BytesIO(pdf_buffer.read()),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=rozuctovani_{user.username}.pdf"}
+    )
 
-
-
-
+@app.get("/pdf/admin/summary")
+async def download_admin_summary(
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    users = db.query(User).all()
+    articles = db.query(Article).all()
+    
+    # Prepare data
+    users_data = []
+    for user in users:
+        user_data = {'username': user.username}
+        for article in articles:
+            count = db.query(UserArticleCount).filter(
+                UserArticleCount.user_id == user.id,
+                UserArticleCount.article_id == article.id
+            ).first()
+            user_data[f'article_{article.id}'] = count.count if count else 0
+        users_data.append(user_data)
+    
+    # Generate PDF
+    pdf_buffer = generate_admin_summary_pdf(users_data, articles)
+    
+    return StreamingResponse(
+        io.BytesIO(pdf_buffer.read()),
+        media_type="application/pdf",
+        headers={"Content-Disposition": "attachment; filename=celkovy_prehled.pdf"}
+    )
 
 
 
