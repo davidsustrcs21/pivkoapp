@@ -16,6 +16,7 @@ from .auth import (
 )
 from .utils import generate_qr_code, generate_payment_qr
 from .pdf_utils import generate_user_report_pdf, generate_admin_summary_pdf
+from .pdf_utils_weasy import generate_user_report_pdf_weasy
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -575,6 +576,37 @@ async def download_admin_summary(
         media_type="application/pdf",
         headers={"Content-Disposition": "attachment; filename=celkovy_prehled.pdf"}
     )
+
+@app.get("/pdf/user-weasy/{user_id}")
+async def download_user_pdf_weasy(
+    user_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Pouze admin nebo vlastní PDF
+    if not current_user.is_admin and current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user_counts = db.query(UserArticleCount).join(Article).filter(
+        UserArticleCount.user_id == user_id,
+        UserArticleCount.count > 0
+    ).all()
+    
+    total_amount = sum(count.count * count.article.price for count in user_counts)
+    
+    # Generate PDF with WeasyPrint
+    pdf_buffer = generate_user_report_pdf_weasy(user, user_counts, total_amount)
+    
+    return StreamingResponse(
+        io.BytesIO(pdf_buffer.read()),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=rozuctovani_{user.username}_weasy.pdf"}
+    )
+
 
 
 
