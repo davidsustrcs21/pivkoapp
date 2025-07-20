@@ -104,16 +104,49 @@ async def login(
     return response
 
 @app.get("/register", response_class=HTMLResponse)
-async def register_page(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
+async def register_page(request: Request, ref: str = None):
+    if not ref:
+        return templates.TemplateResponse("error.html", {
+            "request": request,
+            "title": "Registrace není povolena",
+            "emoji": "🚫",
+            "message": "Registrace je možná pouze přes QR kód",
+            "detail": "Požádejte stávajícího uživatele o QR kód pro registraci.",
+            "show_login": True
+        })
+    
+    # Ověř, že referenční uživatel existuje
+    db = next(get_db())
+    ref_user = db.query(User).filter(User.username == ref).first()
+    if not ref_user:
+        return templates.TemplateResponse("error.html", {
+            "request": request,
+            "title": "Neplatný QR kód",
+            "emoji": "❌",
+            "message": "QR kód není platný",
+            "detail": "Požádejte o nový QR kód pro registraci.",
+            "show_login": True
+        })
+    
+    return templates.TemplateResponse("register.html", {
+        "request": request,
+        "ref_user": ref_user.username,
+        "ref": ref
+    })
 
 @app.post("/register")
 async def register(
     username: str = Form(...),
     email: str = Form(...),
     password: str = Form(...),
+    ref: str = Form(...),
     db: Session = Depends(get_db)
 ):
+    # Ověř referenční kód
+    ref_user = db.query(User).filter(User.username == ref).first()
+    if not ref_user:
+        raise HTTPException(status_code=400, detail="Neplatný referenční kód")
+    
     # Check if user exists
     if db.query(User).filter(User.username == username).first():
         raise HTTPException(status_code=400, detail="Username already exists")
@@ -128,7 +161,7 @@ async def register(
     db.add(user)
     db.commit()
     
-    return RedirectResponse(url="/login", status_code=302)
+    return RedirectResponse(url="/login?registered=true", status_code=302)
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(
@@ -625,6 +658,10 @@ async def unauthorized_handler(request: Request, exc: HTTPException):
         "detail": "Pro pokračování se prosím přihlaste.",
         "show_login": True
     }, status_code=401)
+
+
+
+
 
 
 
