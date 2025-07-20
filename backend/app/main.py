@@ -77,6 +77,7 @@ async def login_page(request: Request):
 
 @app.post("/login")
 async def login(
+    request: Request,
     response: Response,
     username: str = Form(...),
     password: str = Form(...),
@@ -84,7 +85,14 @@ async def login(
 ):
     user = db.query(User).filter(User.username == username).first()
     if not user or not verify_password(password, user.hashed_password):
-        raise HTTPException(status_code=400, detail="Invalid credentials")
+        return templates.TemplateResponse("error.html", {
+            "request": request,
+            "title": "Neplatné přihlašovací údaje",
+            "emoji": "🔐",
+            "message": "Špatné uživatelské jméno nebo heslo",
+            "detail": "Zkontrolujte prosím své přihlašovací údaje a zkuste to znovu.",
+            "show_login": True
+        })
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
@@ -606,6 +614,19 @@ async def download_user_pdf_weasy(
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=rozuctovani_{user.username}_weasy.pdf"}
     )
+
+@app.exception_handler(401)
+async def unauthorized_handler(request: Request, exc: HTTPException):
+    return templates.TemplateResponse("error.html", {
+        "request": request,
+        "title": "Neautorizovaný přístup",
+        "emoji": "🚫",
+        "message": "Nejste přihlášeni nebo vypršela platnost přihlášení",
+        "detail": "Pro pokračování se prosím přihlaste.",
+        "show_login": True
+    }, status_code=401)
+
+
 
 
 

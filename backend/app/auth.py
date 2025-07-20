@@ -30,14 +30,15 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 def get_current_user(access_token: Optional[str] = Cookie(None), db: Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+    from fastapi import Request
+    from fastapi.templating import Jinja2Templates
     
     if not access_token:
-        raise credentials_exception
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Nejste přihlášeni",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     
     # Remove "Bearer " prefix if present
     token = access_token.replace("Bearer ", "") if access_token.startswith("Bearer ") else access_token
@@ -46,13 +47,25 @@ def get_current_user(access_token: Optional[str] = Cookie(None), db: Session = D
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         if username is None:
-            raise credentials_exception
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Neplatný token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
     except JWTError:
-        raise credentials_exception
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token vypršel nebo je neplatný",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     
     user = db.query(User).filter(User.username == username).first()
     if user is None:
-        raise credentials_exception
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Uživatel neexistuje",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     return user
 
 def get_admin_user(current_user: User = Depends(get_current_user)):
