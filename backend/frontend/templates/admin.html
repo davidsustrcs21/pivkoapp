@@ -138,6 +138,8 @@
                                     
                                     <a href="/calculate-payment/{{ user.id }}" class="bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded text-xs mb-1">Platba</a>
                                     
+                                    <button onclick="sendUserReport({{ user.id }})" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs mb-1">📧 Vyúčtování</button>
+                                    
                                     <!-- Admin toggle -->
                                     <form method="POST" action="/admin/toggle-admin/{{ user.id }}" class="inline">
                                         <button type="submit" class="{% if user.is_admin %}bg-red-500 hover:bg-red-600{% else %}bg-green-500 hover:bg-green-600{% endif %} text-white px-2 py-1 rounded text-xs mb-1">
@@ -368,9 +370,23 @@
             alert('Chyba při rozesílání: ' + error.message);
         }
     }
+
+    async function sendUserReport(userId) {
+        if (!confirm('Odeslat vyúčtování tomuto uživateli?')) return;
+        
+        try {
+            const response = await fetch(`/admin/send-user-report/${userId}`, { method: 'POST' });
+            const data = await response.json();
+            alert(data.message || data.error);
+        } catch (error) {
+            alert('Chyba při odesílání: ' + error.message);
+        }
+    }
     </script>
 </body>
 </html>
+
+
 
 
 
