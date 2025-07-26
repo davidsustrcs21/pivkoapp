@@ -24,8 +24,11 @@ def generate_qr_code(data: str) -> str:
 
 def generate_payment_qr(amount: float, message: str, account: str) -> str:
     """Generate QR code for bank payment with account number"""
-    # Formát pro české banky (SPAYD) - bez MSG
-    payment_string = f"SPD*1.0*ACC:CZ{account}*AM:{amount:.2f}*CC:CZK*"
+    # Odstraň kód banky z čísla účtu
+    account_number = account.split('/')[0] if '/' in account else account
+    
+    # Formát s částkou
+    payment_string = f"SPD*1.0*ACC:CZ{account_number}*AM:{amount:.2f}*CC:CZK*"
     
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
     qr.add_data(payment_string)
@@ -39,6 +42,9 @@ def generate_payment_qr(amount: float, message: str, account: str) -> str:
     
     img_base64 = base64.b64encode(buffer.getvalue()).decode()
     return f"data:image/png;base64,{img_base64}"
+
+
+
 
 
 
