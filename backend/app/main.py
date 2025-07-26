@@ -10,7 +10,7 @@ import os
 import io
 
 from .database import engine, get_db
-from .models import Base, User, CountEntry, Settings, Article, UserArticleCount
+from .models import Base, User, CountEntry, Settings, Article, UserArticleCount, EmailSettings
 from .auth import (
     verify_password, get_password_hash, create_access_token,
     get_current_user, get_admin_user, ACCESS_TOKEN_EXPIRE_MINUTES
@@ -353,6 +353,7 @@ async def admin_panel(
     try:
         users = db.query(User).all()
         articles = db.query(Article).all()
+        email_settings = db.query(EmailSettings).first()
         
         # Spočítej celkové počty jednodušeji
         total_beer_count = 0
@@ -413,6 +414,7 @@ async def admin_panel(
             "request": request,
             "users": users,
             "articles": articles,
+            "email_settings": email_settings,
             "total_beer_count": total_beer_count,
             "total_birell_count": total_birell_count,
             "total_entry_count": total_entry_count
@@ -599,6 +601,44 @@ async def update_article(
     
     return RedirectResponse(url="/admin", status_code=302)
 
+@app.post("/admin/email-settings")
+async def update_email_settings(
+    provider: str = Form(...),
+    smtp_host: str = Form(...),
+    smtp_port: int = Form(...),
+    username: str = Form(...),
+    password: str = Form(...),
+    from_email: str = Form(...),
+    is_enabled: bool = Form(False),
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    settings = db.query(EmailSettings).first()
+    if not settings:
+        settings = EmailSettings()
+        db.add(settings)
+    
+    settings.provider = provider
+    settings.smtp_host = smtp_host
+    settings.smtp_port = smtp_port
+    settings.username = username
+    settings.password = password
+    settings.from_email = from_email
+    settings.is_enabled = is_enabled
+    settings.updated_at = datetime.utcnow()
+    
+    db.commit()
+    return RedirectResponse(url="/admin", status_code=302)
+
+@app.post("/admin/test-email")
+async def test_email(
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    from .email_service import email_service
+    result = await email_service.test_email(db, admin_user.email)
+    return result
+
 @app.post("/logout")
 async def logout():
     response = RedirectResponse(url="/", status_code=302)
@@ -706,6 +746,8 @@ async def unauthorized_handler(request: Request, exc: HTTPException):
         "detail": "Pro pokračování se prosím přihlaste.",
         "show_login": True
     }, status_code=401)
+
+
 
 
 

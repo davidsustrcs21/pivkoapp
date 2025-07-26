@@ -29,15 +29,7 @@ class CountEntry(Base):
     
     user = relationship("User", back_populates="entries")
 
-class Settings(Base):
-    __tablename__ = "settings"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    beer_price = Column(Float, default=50.0)
-    birell_price = Column(Float, default=30.0)
-    entry_price = Column(Float, default=100.0)
-    payment_account = Column(String, default="123456789/0100")
-    payment_qr_data = Column(Text, nullable=True)
+# Settings class removed - replaced by Article model
 
 class Article(Base):
     __tablename__ = "articles"
@@ -61,6 +53,17 @@ class UserArticleCount(Base):
     user = relationship("User", back_populates="article_counts")
     article = relationship("Article")
 
-
-
+class EmailSettings(Base):
+    __tablename__ = "email_settings"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    provider = Column(String, default="gmail")  # gmail nebo o365
+    smtp_host = Column(String, default="")
+    smtp_port = Column(Integer, default=587)
+    username = Column(String, default="")
+    password = Column(String, default="")
+    from_email = Column(String, default="")
+    is_enabled = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
