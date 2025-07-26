@@ -227,6 +227,62 @@
                 {% endfor %}
             </div>
         </div>
+
+        <!-- Email Settings Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">📧 Nastavení emailů</h2>
+            
+            <form method="POST" action="/admin/email-settings" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Poskytovatel</label>
+                        <select name="provider" onchange="updateEmailProvider(this.value)" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                            <option value="gmail" {% if email_settings and email_settings.provider == 'gmail' %}selected{% endif %}>Gmail</option>
+                            <option value="o365" {% if email_settings and email_settings.provider == 'o365' %}selected{% endif %}>Office 365</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SMTP Host</label>
+                        <input type="text" name="smtp_host" id="smtp_host" value="{{ email_settings.smtp_host if email_settings else 'smtp.gmail.com' }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SMTP Port</label>
+                        <input type="number" name="smtp_port" id="smtp_port" value="{{ email_settings.smtp_port if email_settings else 587 }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email uživatele</label>
+                        <input type="email" name="username" value="{{ email_settings.username if email_settings else '' }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Heslo/App Password</label>
+                        <input type="password" name="password" value="{{ email_settings.password if email_settings else '' }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Odesílatel (From)</label>
+                        <input type="email" name="from_email" value="{{ email_settings.from_email if email_settings else '' }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="is_enabled" {% if email_settings and email_settings.is_enabled %}checked{% endif %} class="mr-2">
+                        <span class="text-gray-700 dark:text-gray-300">Povolit odesílání emailů</span>
+                    </label>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Uložit nastavení</button>
+                    <button type="button" onclick="testEmail()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Test email</button>
+                    <button type="button" onclick="sendWeekendReports()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">📧 Rozeslat vyúčtování</button>
+                </div>
+            </form>
+            
+            <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded text-sm">
+                <strong>Návod:</strong><br>
+                <strong>Gmail:</strong> Použijte App Password místo běžného hesla (Google Account → Security → App passwords)<br>
+                <strong>Office 365:</strong> Použijte běžné přihlašovací údaje
+            </div>
+        </div>
     </div>
 
     <script>
@@ -249,9 +305,46 @@
             });
         }
     }
+
+    function updateEmailProvider(provider) {
+        const hostInput = document.getElementById('smtp_host');
+        const portInput = document.getElementById('smtp_port');
+        
+        if (provider === 'gmail') {
+            hostInput.value = 'smtp.gmail.com';
+            portInput.value = 587;
+        } else if (provider === 'o365') {
+            hostInput.value = 'smtp.office365.com';
+            portInput.value = 587;
+        }
+    }
+
+    async function testEmail() {
+        try {
+            const response = await fetch('/admin/test-email', { method: 'POST' });
+            const data = await response.json();
+            alert(data.message || data.error);
+        } catch (error) {
+            alert('Chyba při testu: ' + error.message);
+        }
+    }
+
+    async function sendWeekendReports() {
+        if (!confirm('Rozeslat vyúčtování všem uživatelům?')) return;
+        
+        try {
+            const response = await fetch('/admin/send-weekend-reports', { method: 'POST' });
+            const data = await response.json();
+            alert(data.message || data.error);
+        } catch (error) {
+            alert('Chyba při rozesílání: ' + error.message);
+        }
+    }
     </script>
 </body>
 </html>
+
+
 
 
 
