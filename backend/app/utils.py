@@ -40,8 +40,8 @@ def generate_payment_qr(amount: float, message: str, account: str) -> str:
     # Aktuální datum
     today = datetime.now().strftime('%Y%m%d')
     
-    # Použij 98 jako kontrolní číslice (standardní pro české účty)
-    payment_string = f"SPD*1.0*ACC:CZ98{bank_code}0000{padded_account}*CC:CZK*DT:{today}*"
+    # Formát: 98 + kód banky + 6 nul + číslo účtu (celkem 22 znaků po CZ)
+    payment_string = f"SPD*1.0*ACC:CZ98{bank_code}000000{padded_account}*CC:CZK*DT:{today}*"
     
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
     qr.add_data(payment_string)
@@ -55,37 +55,5 @@ def generate_payment_qr(amount: float, message: str, account: str) -> str:
     
     img_base64 = base64.b64encode(buffer.getvalue()).decode()
     return f"data:image/png;base64,{img_base64}"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
