@@ -51,6 +51,7 @@ def generate_user_report_pdf_weasy(user, user_counts, total_amount):
                     <div class="qr-info">
                         <p><strong>Částka: {data['total']} Kč</strong></p>
                         <p>Účet: {account}</p>
+                        <p>Zpráva: {message}</p>
                     </div>
                 </div>
             </div>
@@ -172,3 +173,4 @@ def generate_user_report_pdf_weasy(user, user_counts, total_amount):
     pdf_bytes = html.write_pdf(font_config=font_config)
     
     return io.BytesIO(pdf_bytes)
+

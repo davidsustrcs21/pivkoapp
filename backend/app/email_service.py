@@ -106,6 +106,9 @@ class EmailService:
 Posíláme ti vyúčtování za víkend.
 Celková částka: {total_amount} Kč
 
+V příloze najdeš PDF s detailním rozpisem a QR kódy pro platbu.
+QR kódy obsahují správné údaje pro české banky ve formátu SPD.
+
 Děkujeme za návštěvu! 🍻
 """
         msg.attach(MIMEText(body, 'plain', 'utf-8'))
@@ -167,4 +170,8 @@ Děkujeme za návštěvu! 🍻
 
 # Singleton instance
 email_service = EmailService()
+
+
+
+
 
