@@ -33,21 +33,15 @@ def generate_payment_qr(amount: float, message: str, account: str) -> str:
         account_number = account
         bank_code = "0100"  # default
     
-    # Doplň nuly do kódu banky na 4 cifry
+    # Doplň nuly do kódu banky na 4 cifry a čísla účtu na 10 cifer
     bank_code = bank_code.zfill(4)
-    
-    # Doplň nuly do čísla účtu na 10 cifer (ne 12)
     padded_account = account_number.zfill(10)
-    
-    # Sestavení IBAN: kontrolní číslice + kód banky + číslo účtu
-    # Pro příklad použijeme 98 jako kontrolní číslice (mělo by se počítat, ale pro jednoduchost)
-    full_account = f"98{bank_code}{padded_account}"
     
     # Aktuální datum
     today = datetime.now().strftime('%Y%m%d')
     
-    # Formát podle vašeho příkladu
-    payment_string = f"SPD*1.0*ACC:CZ{full_account}*CC:CZK*DT:{today}*"
+    # Použij vaši šablonu a nahraď jen kód banky, číslo účtu a datum
+    payment_string = f"SPD*1.0*ACC:CZ{bank_code}{padded_account}*CC:CZK*DT:{today}*"
     
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
     qr.add_data(payment_string)
@@ -61,6 +55,8 @@ def generate_payment_qr(amount: float, message: str, account: str) -> str:
     
     img_base64 = base64.b64encode(buffer.getvalue()).decode()
     return f"data:image/png;base64,{img_base64}"
+
+
 
 
 
