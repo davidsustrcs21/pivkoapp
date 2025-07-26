@@ -24,11 +24,26 @@ def generate_qr_code(data: str) -> str:
 
 def generate_payment_qr(amount: float, message: str, account: str) -> str:
     """Generate QR code for bank payment with account number"""
-    # Odstraň kód banky z čísla účtu
-    account_number = account.split('/')[0] if '/' in account else account
+    from datetime import datetime
     
-    # Formát s částkou
-    payment_string = f"SPD*1.0*ACC:CZ{account_number}*AM:{amount:.2f}*CC:CZK*"
+    # Rozlož číslo účtu na číslo a kód banky
+    if '/' in account:
+        account_number, bank_code = account.split('/')
+    else:
+        account_number = account
+        bank_code = "0100"  # default
+    
+    # Doplň nuly do kódu banky na 4 cifry
+    bank_code = bank_code.zfill(4)
+    
+    # Doplň nuly do čísla účtu na 16 cifer (standardní délka)
+    full_account = bank_code + account_number.zfill(12)
+    
+    # Aktuální datum
+    today = datetime.now().strftime('%Y%m%d')
+    
+    # Formát podle vašeho příkladu
+    payment_string = f"SPD*1.0*ACC:CZ{full_account}*CC:CZK*DT:{today}*"
     
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
     qr.add_data(payment_string)
@@ -42,6 +57,9 @@ def generate_payment_qr(amount: float, message: str, account: str) -> str:
     
     img_base64 = base64.b64encode(buffer.getvalue()).decode()
     return f"data:image/png;base64,{img_base64}"
+
+
+
 
 
 
