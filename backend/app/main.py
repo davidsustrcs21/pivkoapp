@@ -349,69 +349,83 @@ async def admin_panel(
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
-    users = db.query(User).all()
-    articles = db.query(Article).all()
-    
-    # Spočítej celkové počty z UserArticleCount tabulky
-    total_beer_count = 0
-    total_birell_count = 0
-    total_entry_count = 0
-    
-    # Najdi články podle názvu
-    beer_article = db.query(Article).filter(Article.name == "Pivo").first()
-    birell_article = db.query(Article).filter(Article.name == "Birell").first()
-    entry_article = db.query(Article).filter(Article.name == "Vstupné").first()
-    
-    if beer_article:
-        total_beer_count = db.query(func.sum(UserArticleCount.count)).filter(
-            UserArticleCount.article_id == beer_article.id
-        ).scalar() or 0
-    
-    if birell_article:
-        total_birell_count = db.query(func.sum(UserArticleCount.count)).filter(
-            UserArticleCount.article_id == birell_article.id
-        ).scalar() or 0
+    try:
+        users = db.query(User).all()
+        articles = db.query(Article).all()
         
-    if entry_article:
-        total_entry_count = db.query(func.sum(UserArticleCount.count)).filter(
-            UserArticleCount.article_id == entry_article.id
-        ).scalar() or 0
-    
-    # Přidej počty článků k uživatelům
-    for user in users:
-        user.beer_count_new = 0
-        user.birell_count_new = 0
-        user.entry_count_new = 0
+        # Spočítej celkové počty jednodušeji
+        total_beer_count = 0
+        total_birell_count = 0
+        total_entry_count = 0
+        
+        # Najdi články podle názvu
+        beer_article = db.query(Article).filter(Article.name == "Pivo").first()
+        birell_article = db.query(Article).filter(Article.name == "Birell").first()
+        entry_article = db.query(Article).filter(Article.name == "Vstupné").first()
         
         if beer_article:
-            count = db.query(UserArticleCount).filter(
-                UserArticleCount.user_id == user.id,
+            beer_counts = db.query(UserArticleCount).filter(
                 UserArticleCount.article_id == beer_article.id
-            ).first()
-            user.beer_count_new = count.count if count else 0
-            
+            ).all()
+            total_beer_count = sum(count.count for count in beer_counts)
+        
         if birell_article:
-            count = db.query(UserArticleCount).filter(
-                UserArticleCount.user_id == user.id,
+            birell_counts = db.query(UserArticleCount).filter(
                 UserArticleCount.article_id == birell_article.id
-            ).first()
-            user.birell_count_new = count.count if count else 0
+            ).all()
+            total_birell_count = sum(count.count for count in birell_counts)
             
         if entry_article:
-            count = db.query(UserArticleCount).filter(
-                UserArticleCount.user_id == user.id,
+            entry_counts = db.query(UserArticleCount).filter(
                 UserArticleCount.article_id == entry_article.id
-            ).first()
-            user.entry_count_new = count.count if count else 0
-    
-    return templates.TemplateResponse("admin.html", {
-        "request": request,
-        "users": users,
-        "articles": articles,
-        "total_beer_count": total_beer_count,
-        "total_birell_count": total_birell_count,
-        "total_entry_count": total_entry_count
-    })
+            ).all()
+            total_entry_count = sum(count.count for count in entry_counts)
+        
+        # Přidej počty článků k uživatelům
+        for user in users:
+            user.beer_count_new = 0
+            user.birell_count_new = 0
+            user.entry_count_new = 0
+            
+            if beer_article:
+                count = db.query(UserArticleCount).filter(
+                    UserArticleCount.user_id == user.id,
+                    UserArticleCount.article_id == beer_article.id
+                ).first()
+                user.beer_count_new = count.count if count else 0
+                
+            if birell_article:
+                count = db.query(UserArticleCount).filter(
+                    UserArticleCount.user_id == user.id,
+                    UserArticleCount.article_id == birell_article.id
+                ).first()
+                user.birell_count_new = count.count if count else 0
+                
+            if entry_article:
+                count = db.query(UserArticleCount).filter(
+                    UserArticleCount.user_id == user.id,
+                    UserArticleCount.article_id == entry_article.id
+                ).first()
+                user.entry_count_new = count.count if count else 0
+        
+        return templates.TemplateResponse("admin.html", {
+            "request": request,
+            "users": users,
+            "articles": articles,
+            "total_beer_count": total_beer_count,
+            "total_birell_count": total_birell_count,
+            "total_entry_count": total_entry_count
+        })
+        
+    except Exception as e:
+        return templates.TemplateResponse("error.html", {
+            "request": request,
+            "title": "Chyba admin panelu",
+            "emoji": "⚠️",
+            "message": "Nepodařilo se načíst admin panel",
+            "detail": f"Chyba: {str(e)}",
+            "show_login": False
+        })
 
 @app.post("/admin/reset-user/{user_id}")
 async def reset_user_count(
@@ -691,6 +705,8 @@ async def unauthorized_handler(request: Request, exc: HTTPException):
         "detail": "Pro pokračování se prosím přihlaste.",
         "show_login": True
     }, status_code=401)
+
+
 
 
 
