@@ -51,3 +51,7 @@ def generate_payment_qr(amount: float, message: str, account: str) -> str:
 
 
 
+
+
+
+
