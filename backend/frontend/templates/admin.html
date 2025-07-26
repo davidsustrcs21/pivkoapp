@@ -339,7 +339,12 @@
     }
 
     async function testEmail() {
-        try {sage);
+        try {
+            const response = await fetch('/admin/test-email', { method: 'POST' });
+            const data = await response.json();
+            alert(data.message || data.error);
+        } catch (error) {
+            alert('Chyba při testu: ' + error.message);
         }
     }
 
@@ -363,16 +368,9 @@
             alert('Chyba při rozesílání: ' + error.message);
         }
     }
-
-    function showEmailChange(userId) {
-        document.getElementById('emailForm').action = `/admin/change-email/${userId}`;
-        document.getElementById('emailModal').classList.remove('hidden');
-    }
-
-    function hideEmailChange() {
-        document.getElementById('emailModal').classList.add('hidden');
-    }
     </script>
 </body>
 </html>
+
+
 
