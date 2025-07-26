@@ -131,5 +131,40 @@ Děkujeme za návštěvu! 🍻
             password=settings.password,
         )
 
+    async def send_single_user_report(self, db: Session, user: User) -> dict:
+        """Odešle vyúčtování jednomu konkrétnímu uživateli"""
+        try:
+            settings = db.query(EmailSettings).first()
+            if not settings or not settings.is_enabled:
+                return {"error": "Email služba není povolena"}
+            
+            if not settings.username or not settings.password:
+                return {"error": "Email údaje nejsou kompletní"}
+            
+            if not user.email:
+                return {"error": f"Uživatel {user.username} nemá nastavený email"}
+            
+            # Získej počty uživatele
+            user_counts = db.query(UserArticleCount).join(Article).filter(
+                UserArticleCount.user_id == user.id,
+                UserArticleCount.count > 0
+            ).all()
+            
+            if not user_counts:
+                return {"error": f"Uživatel {user.username} nemá žádné položky k vyúčtování"}
+            
+            # Vygeneruj PDF
+            total_amount = sum(count.count * count.article.price for count in user_counts)
+            pdf_buffer = generate_user_report_pdf_weasy(user, user_counts, total_amount)
+            
+            # Odešli email
+            await self._send_user_report(user, pdf_buffer, total_amount, settings)
+            
+            return {"message": f"Vyúčtování úspěšně odesláno uživateli {user.username} na {user.email}"}
+            
+        except Exception as e:
+            return {"error": f"Chyba při odesílání: {str(e)}"}
+
 # Singleton instance
 email_service = EmailService()
+

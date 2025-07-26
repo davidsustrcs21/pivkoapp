@@ -761,6 +761,38 @@ async def change_user_email(
     
     return RedirectResponse(url="/admin", status_code=302)
 
+@app.post("/admin/send-user-report/{user_id}")
+async def send_user_report(
+    user_id: int,
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    try:
+        from .email_service import email_service
+        
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return {"error": "Uživatel nenalezen"}
+        
+        if not user.email:
+            return {"error": f"Uživatel {user.username} nemá nastavený email"}
+        
+        # Získej počty uživatele
+        user_counts = db.query(UserArticleCount).join(Article).filter(
+            UserArticleCount.user_id == user_id,
+            UserArticleCount.count > 0
+        ).all()
+        
+        if not user_counts:
+            return {"error": f"Uživatel {user.username} nemá žádné položky k vyúčtování"}
+        
+        # Odešli vyúčtování
+        result = await email_service.send_single_user_report(db, user)
+        return result
+        
+    except Exception as e:
+        return {"error": f"Chyba při odesílání: {str(e)}"}
+
 @app.exception_handler(401)
 async def unauthorized_handler(request: Request, exc: HTTPException):
     return templates.TemplateResponse("error.html", {
@@ -771,6 +803,7 @@ async def unauthorized_handler(request: Request, exc: HTTPException):
         "detail": "Pro pokračování se prosím přihlaste.",
         "show_login": True
     }, status_code=401)
+
 
 
 
