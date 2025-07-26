@@ -10,7 +10,7 @@ import os
 import io
 
 from .database import engine, get_db
-from .models import Base, User, CountEntry, Settings, Article, UserArticleCount, EmailSettings
+from .models import Base, User, CountEntry, Article, UserArticleCount, EmailSettings
 from .auth import (
     verify_password, get_password_hash, create_access_token,
     get_current_user, get_admin_user, ACCESS_TOKEN_EXPIRE_MINUTES
@@ -746,6 +746,8 @@ async def unauthorized_handler(request: Request, exc: HTTPException):
         "detail": "Pro pokračování se prosím přihlaste.",
         "show_login": True
     }, status_code=401)
+
+
 
 
 
