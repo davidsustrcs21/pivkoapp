@@ -635,9 +635,12 @@ async def test_email(
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
-    from .email_service import email_service
-    result = await email_service.test_email(db, admin_user.email)
-    return result
+    try:
+        from .email_service import email_service
+        result = await email_service.test_email(db, admin_user.email)
+        return result
+    except Exception as e:
+        return {"error": f"Chyba při testu emailu: {str(e)}"}
 
 @app.post("/logout")
 async def logout():
@@ -746,6 +749,7 @@ async def unauthorized_handler(request: Request, exc: HTTPException):
         "detail": "Pro pokračování se prosím přihlaste.",
         "show_login": True
     }, status_code=401)
+
 
 
 
