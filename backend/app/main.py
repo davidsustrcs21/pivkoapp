@@ -739,6 +739,28 @@ async def download_user_pdf_weasy(
         headers={"Content-Disposition": f"attachment; filename=rozuctovani_{user.username}_weasy.pdf"}
     )
 
+@app.post("/admin/change-email/{user_id}")
+async def change_user_email(
+    user_id: int,
+    new_email: str = Form(...),
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Uživatel nenalezen")
+    
+    # Zkontroluj, jestli email už neexistuje (kromě současného uživatele)
+    existing_user = db.query(User).filter(User.email == new_email, User.id != user_id).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email už používá jiný uživatel")
+    
+    # Admin může změnit email komukoli včetně sebe
+    user.email = new_email
+    db.commit()
+    
+    return RedirectResponse(url="/admin", status_code=302)
+
 @app.exception_handler(401)
 async def unauthorized_handler(request: Request, exc: HTTPException):
     return templates.TemplateResponse("error.html", {
@@ -749,6 +771,10 @@ async def unauthorized_handler(request: Request, exc: HTTPException):
         "detail": "Pro pokračování se prosím přihlaste.",
         "show_login": True
     }, status_code=401)
+
+
+
+
 
 
 
