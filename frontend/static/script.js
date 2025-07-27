@@ -43,6 +43,25 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // Floating numbers effect pro dashboard tlačítka
+    document.addEventListener('click', function(e) {
+        // Zachyť kliknutí na tlačítka + a - na dashboardu
+        if (e.target.tagName === 'BUTTON' && e.target.closest('form[action="/add-count"]')) {
+            const form = e.target.closest('form');
+            const amountInput = form.querySelector('input[name="amount"]');
+            
+            if (amountInput) {
+                const amount = parseInt(amountInput.value);
+                const card = form.closest('.bg-white') || form.closest('.dark\\:bg-gray-800');
+                
+                if (card && amount !== 0) {
+                    // Spusť efekt před odesláním formuláře
+                    showFloatingNumber(card, amount);
+                }
+            }
+        }
+    });
 });
 
 function showFloatingNumber(element, amount) {
@@ -67,6 +86,9 @@ function showFloatingNumber(element, amount) {
         }
     }, 1000);
 }
+
+
+
 
 
 
