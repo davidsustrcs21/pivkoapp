@@ -793,6 +793,18 @@ async def send_user_report(
     except Exception as e:
         return {"error": f"Chyba při odesílání: {str(e)}"}
 
+@app.post("/admin/send-weekend-reports")
+async def send_weekend_reports(
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    try:
+        from .email_service import email_service
+        result = await email_service.send_weekend_reports(db)
+        return result
+    except Exception as e:
+        return {"error": f"Chyba při rozesílání: {str(e)}"}
+
 @app.exception_handler(401)
 async def unauthorized_handler(request: Request, exc: HTTPException):
     return templates.TemplateResponse("error.html", {
@@ -803,6 +815,7 @@ async def unauthorized_handler(request: Request, exc: HTTPException):
         "detail": "Pro pokračování se prosím přihlaste.",
         "show_login": True
     }, status_code=401)
+
 
 
 
