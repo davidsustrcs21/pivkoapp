@@ -363,10 +363,21 @@
         if (!confirm('Rozeslat vyúčtování všem uživatelům?')) return;
         
         try {
-            const response = await fetch('/admin/send-weekend-reports', { method: 'POST' });
+            const response = await fetch('/admin/send-weekend-reports', { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
             const data = await response.json();
-            alert(data.message || data.error);
+            alert(data.message || data.error || 'Neznámá chyba');
         } catch (error) {
+            console.error('Error:', error);
             alert('Chyba při rozesílání: ' + error.message);
         }
     }
@@ -385,6 +396,7 @@
     </script>
 </body>
 </html>
+
 
 
 
