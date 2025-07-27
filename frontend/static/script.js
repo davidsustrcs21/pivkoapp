@@ -20,13 +20,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            if (!confirm('Opravdu chcete smazat tohoto uživatele? Tato akce je nevratná!')) {
-                e.preventDefault();
-            }
-        });
-    });
 });
 
+// Dark mode toggle function
+function toggleDarkMode() {
+    if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.theme = 'light';
+    } else {
+        document.documentElement.classList.add('dark');
+        localStorage.theme = 'dark';
+    }
+}
