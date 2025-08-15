@@ -2,33 +2,23 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies including fonts and WeasyPrint dependencies
+# Instalace závislostí systému
 RUN apt-get update && apt-get install -y \
     fonts-dejavu-core \
     fonts-noto-color-emoji \
     libpango-1.0-0t64 \
     libharfbuzz0b0t64 \
     libpangoft2-1.0-0t64 \
-    libgdk-pixbuf2.0-0t64 \
+    libgdk-pixbuf-2.0-0t64 \
     libffi-dev \
     shared-mime-info \
  && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install dependencies
+# Instalace Python závislostí
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend app
-COPY app/ ./app/
+# Kopírování zdrojů
+COPY . .
 
-# Copy frontend files from parent directory
-COPY ../frontend/ ./frontend/
-
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-
-
-
-
-
-
-
+CMD ["python", "main.py"]
