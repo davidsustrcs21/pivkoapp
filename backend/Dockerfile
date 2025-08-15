@@ -29,3 +29,4 @@ COPY . /app
 
 # Spusť aplikaci
 CMD ["python", "main.py"]
+ 
