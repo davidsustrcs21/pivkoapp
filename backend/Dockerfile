@@ -1,6 +1,7 @@
 FROM python:3.11-slim-bookworm
 
 WORKDIR /app
+COPY . /app
 
 # Instalace závislostí systému
 RUN apt-get update && apt-get install -y \
