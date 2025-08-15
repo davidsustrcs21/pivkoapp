@@ -89,29 +89,3 @@ input:focus, textarea:focus {
     border: 1px solid #fca5a5;
 }
 
-/* Floating numbers effect (Warcraft style) */
-.floating-number {
-    position: fixed;
-    font-size: 1.5rem;
-    font-weight: bold;
-    pointer-events: none;
-    z-index: 1000;
-    transition: all 0.8s ease-out;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-    transform: translateX(-50%);
-}
-
-.floating-number.positive {
-    color: #10b981;
-}
-
-.floating-number.negative {
-    color: #ef4444;
-}
-
-/* Enhanced button effects */
-button:active {
-    transform: translateY(1px) scale(0.95);
-}
-
-
