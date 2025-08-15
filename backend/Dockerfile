@@ -1,7 +1,6 @@
 FROM python:3.11-slim
-
-WORKDIR /app
 USER root
+WORKDIR /app
 
 # Install system dependencies including fonts and WeasyPrint dependencies
 RUN apt-get update && apt-get install -y \
