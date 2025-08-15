@@ -1,9 +1,11 @@
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
 
 WORKDIR /app
 
 # Install system dependencies including fonts and WeasyPrint dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    apt-transport-https \
+    ca-certificates \
     fonts-dejavu-core \
     fonts-noto-color-emoji \
     libpango-1.0-0 \
@@ -13,7 +15,6 @@ RUN apt-get update && apt-get install -y \
     libffi-dev \
     shared-mime-info \
     && rm -rf /var/lib/apt/lists/*
-
 # Copy requirements and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
