@@ -1,14 +1,12 @@
 FROM python:3.11-slim
 
-# Nastavení pracovního adresáře
 WORKDIR /app
 
-# Aktualizace a instalace základních nástrojů + fontů + závislostí
-RUN apt-get update && \
+# Instalace základních balíků + závislostí pro fonty
+RUN apt-get update -y --fix-missing && \
     apt-get install -y --no-install-recommends \
         apt-utils \
         ca-certificates \
-        gnupg \
         fonts-dejavu-core \
         fonts-noto-color-emoji \
         libpango-1.0-0 \
@@ -17,14 +15,17 @@ RUN apt-get update && \
         libgdk-pixbuf2.0-0 \
         libffi-dev \
         shared-mime-info \
+        wget \
+        gnupg \
+        lsb-release \
     && rm -rf /var/lib/apt/lists/*
 
-# Zkopíruj requirements a nainstaluj Python balíčky
+# Zkopíruj a nainstaluj requirements
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Zkopíruj celý backend kód
+# Zkopíruj celý kód
 COPY . /app
 
-# Spusť backend
+# Spusť aplikaci
 CMD ["python", "main.py"]
